@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelele Collective</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: #1a1a1a;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a2a;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #ffffff;
+            transition: opacity 0.3s;
+        }
+
+        .logo:hover {
+            opacity: 0.8;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            padding: 10px 15px 10px 40px;
+            border-radius: 8px;
+            color: #ffffff;
+            font-size: 14px;
+            width: 300px;
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4a90e2;
+            background: #333;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #888;
+            font-size: 16px;
+        }
+
+        .filter-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .filter-btn:hover {
+            background: #333;
+            border-color: #4a4a4a;
+        }
+
+        .filters-panel {
+            background: #1a1a1a;
+            padding: 20px 40px;
+            border-bottom: 1px solid #2a2a2a;
+            display: none;
+            position: sticky;
+            top: 71px;
+            z-index: 99;
+        }
+
+        .filters-panel.active {
+            display: block;
+        }
+
+        .filters-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        select {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 180px;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px;
+        }
+
+        .stats {
+            margin-bottom: 30px;
+            color: #888;
+            font-size: 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid #2a2a2a;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            border-color: #4a90e2;
+            box-shadow: 0 8px 30px rgba(74, 144, 226, 0.2);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            background: #2a2a2a;
+            position: relative;
+        }
+
+        .card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .reel-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-image-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            font-weight: 700;
+            color: #ffffff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-meta {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+        }
+
+        /* Category Badge Colors */
+        .category-graphic-design,
+        .category-design {
+            background: rgba(156, 39, 176, 0.2);
+            color: #ce93d8;
+        }
+
+        .category-photography {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ffb74d;
+        }
+
+        .category-ui-ux-design,
+        .category-uiux-design {
+            background: rgba(33, 150, 243, 0.2);
+            color: #64b5f6;
+        }
+
+        .category-content-writing,
+        .category-writing {
+            background: rgba(76, 175, 80, 0.2);
+            color: #81c784;
+        }
+
+        .category-motion-graphics {
+            background: rgba(244, 67, 54, 0.2);
+            color: #e57373;
+        }
+
+        .category-video-production {
+            background: rgba(233, 30, 99, 0.2);
+            color: #f06292;
+        }
+
+        .category-sound-design {
+            background: rgba(103, 58, 183, 0.2);
+            color: #9575cd;
+        }
+
+        .category-web-development,
+        .category-development {
+            background: rgba(0, 188, 212, 0.2);
+            color: #4dd0e1;
+        }
+
+        .category-illustration {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffd54f;
+        }
+
+        .category-social-media-management,
+        .category-social-media {
+            background: rgba(63, 81, 181, 0.2);
+            color: #7986cb;
+        }
+
+        .card-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            color: #888;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .card-social {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .social-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2a2a2a;
+            color: #888;
+            text-decoration: none;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-2px);
+        }
+
+        .social-icon.instagram:hover {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: white;
+        }
+
+        .social-icon.linkedin:hover {
+            background: #0077b5;
+            color: white;
+        }
+
+        .social-icon.twitter:hover {
+            background: #000000;
+            color: white;
+        }
+
+        .social-icon.facebook:hover {
+            background: #1877f2;
+            color: white;
+        }
+
+        .social-icon.behance:hover {
+            background: #1769ff;
+            color: white;
+        }
+
+        .social-icon.whatsapp:hover {
+            background: #25d366;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            max-width: 700px;
+            margin: 40px auto;
+            border-radius: 16px;
+            position: relative;
+            border: 1px solid #2a2a2a;
+        }
+
+        .close {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 28px;
+            font-weight: 300;
+            color: #888;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .close:hover {
+            background: #2a2a2a;
+            color: #ffffff;
+        }
+
+        .modal-header {
+            text-align: center;
+            padding: 40px 40px 20px;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .modal-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .modal-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .modal-name {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .modal-tagline {
+            font-size: 1.1rem;
+            color: #888;
+            margin-bottom: 20px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #3a3a3a;
+        }
+
+        .btn-portfolio {
+            background: #4a90e2;
+            color: white;
+            border-color: #4a90e2;
+        }
+
+        .btn-portfolio:hover {
+            background: #3a7bc8;
+        }
+
+        .btn-email {
+            background: #2a2a2a;
+            color: white;
+        }
+
+        .btn-email:hover {
+            background: #3a3a3a;
+        }
+
+        .btn-phone {
+            background: #2a2a2a;
+            color: white;
+        }
+
+        .btn-phone:hover {
+            background: #3a3a3a;
+        }
+
+        .btn-whatsapp {
+            background: #25d366;
+            color: white;
+            border-color: #25d366;
+        }
+
+        .btn-whatsapp:hover {
+            background: #1faa52;
+        }
+
+        .btn-reel {
+            background: #e74c3c;
+            color: white;
+            border-color: #e74c3c;
+        }
+
+        .btn-reel:hover {
+            background: #c0392b;
+        }
+
+        .modal-body {
+            padding: 30px 40px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section:last-child {
+            margin-bottom: 0;
+        }
+
+        .section-title {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .section-content {
+            color: #ccc;
+            line-height: 1.6;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .info-item {
+            background: #0a0a0a;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2a;
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            color: #ffffff;
+            font-size: 0.95rem;
+        }
+
+        .info-value a {
+            color: #4a90e2;
+            text-decoration: none;
+        }
+
+        .info-value a:hover {
+            text-decoration: underline;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .social-link-large {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #2a2a2a;
+            color: #888;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .social-link-large:hover {
+            transform: translateY(-3px);
+        }
+
+        .social-link-large.instagram:hover {
+            background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+            color: white;
+        }
+
+        .social-link-large.linkedin:hover {
+            background: #0077b5;
+            color: white;
+        }
+
+        .social-link-large.twitter:hover {
+            background: #000000;
+            color: white;
+        }
+
+        .social-link-large.facebook:hover {
+            background: #1877f2;
+            color: white;
+        }
+
+        .social-link-large.behance:hover {
+            background: #1769ff;
+            color: white;
+        }
+
+        .video-container {
+            background: #0a0a0a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 30px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+        }
+
+        .video-wrapper iframe,
+        .video-wrapper video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-wrapper video {
+            background: #000;
+        }
+
+        .video-label {
+            padding: 15px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #2a2a2a;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .portfolio-preview {
+            background: #0a0a0a;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #2a2a2a;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .portfolio-preview:hover {
+            border-color: #4a90e2;
+            transform: translateY(-2px);
+        }
+
+        .portfolio-preview img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .portfolio-preview-label {
+            padding: 15px;
+            background: #0a0a0a;
+            border-top: 1px solid #2a2a2a;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .portfolio-preview-label span {
+            color: #4a90e2;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 80px 20px;
+            color: #666;
+        }
+
+        .no-results h2 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #888;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            font-size: 1.1rem;
+            padding: 80px 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal-content {
+                margin: 20px auto;
+            }
+
+            .modal-header,
+            .modal-body {
+                padding: 30px 20px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/" class="logo" style="text-decoration: none; color: inherit; cursor: pointer;" onclick="window.location.reload(); return false;">Kelele Collective</a>
+        <div class="header-controls">
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search">
+            </div>
+            <button class="filter-btn" onclick="toggleFilters()">
+                <span>⚙</span>
+                Filter
+            </button>
+        </div>
+    </div>
+
+    <div class="filters-panel" id="filtersPanel">
+        <div class="filters-row">
+            <select id="fieldFilter">
+                <option value="">All Fields</option>
+            </select>
+            <select id="levelFilter">
+                <option value="">All Levels</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="stats" id="stats">
+            <span>Showing <strong id="showingCount">0</strong> of <strong id="totalCount">0</strong> creatives</span>
+        </div>
+
+        <div id="loading" class="loading">Loading creatives...</div>
+        <div id="grid" class="grid"></div>
+        <div id="noResults" class="no-results" style="display: none;">
+            <h2>No results found</h2>
+            <p>Try adjusting your search or filters</p>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        const SHEET_ID = '1vQWdKbNtZVvd4mX0CcUUx7Yhhq_qOhVt6i77zukDYS4';
+        const SHEET_NAME = 'kelele_collective';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=96240212`;
+
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+        let allCreatives = [];
+        let filteredCreatives = [];
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+        function getCategoryClass(field) {
+            if (!field) return '';
+            const normalized = field.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            return 'category-' + normalized;
+        }
+
+        function formatPhoneForWhatsApp(phone) {
+            // Remove spaces, dashes, parentheses, and other formatting
+            let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+            // If phone doesn't start with +, it might already be formatted
+            // Just return the cleaned version
+            return cleaned;
+        }
+
+        function getSocialUrl(platform, value) {
+            if (!value || !value.trim()) return null;
+            
+            // If already a full URL, return it
+            if (value.startsWith('http://') || value.startsWith('https://')) {
+                return value;
+            }
+            
+            // Remove @ symbol if present
+            const cleanValue = value.replace('@', '').trim();
+            
+            // Construct URL based on platform
+            const urls = {
+                instagram: `https://instagram.com/${cleanValue}`,
+                linkedin: cleanValue.startsWith('/') ? `https://linkedin.com${cleanValue}` : `https://linkedin.com/in/${cleanValue}`,
+                twitter: `https://twitter.com/${cleanValue}`,
+                facebook: `https://facebook.com/${cleanValue}`,
+                behance: `https://behance.net/${cleanValue}`
+            };
+            
+            return urls[platform] || null;
+        }
+
+        function getVideoEmbedUrl(url) {
+            if (!url) return null;
+            
+            // YouTube
+            if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                let videoId = '';
+                if (url.includes('youtu.be/')) {
+                    videoId = url.split('youtu.be/')[1].split('?')[0];
+                } else if (url.includes('youtube.com/watch')) {
+                    const urlParams = new URLSearchParams(url.split('?')[1]);
+                    videoId = urlParams.get('v');
+                } else if (url.includes('youtube.com/embed/')) {
+                    videoId = url.split('embed/')[1].split('?')[0];
+                }
+                return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+            }
+            
+            // Vimeo
+            if (url.includes('vimeo.com')) {
+                const videoId = url.split('vimeo.com/')[1]?.split('?')[0];
+                return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
+            }
+            
+            // Direct video files
+            if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                return url;
+            }
+            
+            return null;
+        }
+
+        function isDirectVideo(url) {
+            return url && url.match(/\.(mp4|webm|ogg)$/i);
+        }
+
+        function hasValue(value) {
+            return value && value.trim() !== '' && value.toLowerCase() !== 'n/a';
+        }
+
+        function getSocialIcon(platform) {
+            const icons = {
+                instagram: 'IG',
+                linkedin: 'in',
+                twitter: '𝕏',
+                facebook: 'f',
+                behance: 'Bē',
+                whatsapp: 'WA'
+            };
+            return icons[platform] || '🔗';
+        }
+
+        // ============================================
+        // TOGGLE FILTERS
+        // ============================================
+        function toggleFilters() {
+            const panel = document.getElementById('filtersPanel');
+            panel.classList.toggle('active');
+        }
+
+        // ============================================
+        // FETCH DATA FROM GOOGLE SHEETS
+        // ============================================
+        async function fetchData() {
+            try {
+                console.log('Fetching from URL:', SHEET_URL);
+                const response = await fetch(SHEET_URL);
+                console.log('Response status:', response.status);
+                const csvText = await response.text();
+                console.log('CSV length:', csvText.length);
+                console.log('First 200 characters:', csvText.substring(0, 200));
+                const data = parseCSV(csvText);
+                console.log('Parsed data count:', data.length);
+                console.log('First record:', data[0]);
+                return data;
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('loading').innerHTML = 
+                    `<p>Error loading data: ${error.message}</p>
+                    <p>Please check your Sheet ID and make sure the sheet is publicly accessible.</p>
+                    <p>URL being fetched: ${SHEET_URL}</p>`;
+                return [];
+            }
+        }
+
+        // ============================================
+        // PARSE CSV DATA
+        // ============================================
+        function parseCSV(csv) {
+            const lines = csv.split('\n');
+            const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim());
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim()) {
+                    const values = parseCSVLine(lines[i]);
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = values[index] || '';
+                    });
+                    data.push(obj);
+                }
+            }
+            return data;
+        }
+
+        function parseCSVLine(line) {
+            const values = [];
+            let currentValue = '';
+            let insideQuotes = false;
+
+            for (let char of line) {
+                if (char === '"') {
+                    insideQuotes = !insideQuotes;
+                } else if (char === ',' && !insideQuotes) {
+                    values.push(currentValue.trim());
+                    currentValue = '';
+                } else {
+                    currentValue += char;
+                }
+            }
+            values.push(currentValue.trim());
+            return values;
+        }
+
+        // ============================================
+        // RENDER CREATIVES GRID
+        // ============================================
+        function renderCreatives(creatives) {
+            const grid = document.getElementById('grid');
+            const loading = document.getElementById('loading');
+            const noResults = document.getElementById('noResults');
+
+            loading.style.display = 'none';
+
+            if (creatives.length === 0) {
+                grid.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            grid.innerHTML = '';
+
+            creatives.forEach(creative => {
+                const card = createCard(creative);
+                grid.appendChild(card);
+            });
+
+            updateStats();
+        }
+
+        // ============================================
+        // CREATE CARD ELEMENT
+        // ============================================
+        function createCard(creative) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.onclick = () => openModal(creative);
+
+            const initials = hasValue(creative.Name) ? creative.Name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '?';
+            const categoryClass = getCategoryClass(creative.FIELD);
+
+            // Build social icons for card - only if they have values
+            let socialIconsHTML = '';
+            
+            const instagramUrl = getSocialUrl('instagram', creative.Instagram);
+            if (instagramUrl) {
+                socialIconsHTML += `<a href="${instagramUrl}" target="_blank" rel="noopener noreferrer" class="social-icon instagram" onclick="event.stopPropagation()" title="Instagram">IG</a>`;
+            }
+            
+            const linkedinUrl = getSocialUrl('linkedin', creative.LinkedIn);
+            if (linkedinUrl) {
+                socialIconsHTML += `<a href="${linkedinUrl}" target="_blank" rel="noopener noreferrer" class="social-icon linkedin" onclick="event.stopPropagation()" title="LinkedIn">in</a>`;
+            }
+            
+            const twitterUrl = getSocialUrl('twitter', creative.Twitter);
+            if (twitterUrl) {
+                socialIconsHTML += `<a href="${twitterUrl}" target="_blank" rel="noopener noreferrer" class="social-icon twitter" onclick="event.stopPropagation()" title="X (Twitter)">𝕏</a>`;
+            }
+            
+            const behanceUrl = getSocialUrl('behance', creative.Behance);
+            if (behanceUrl) {
+                socialIconsHTML += `<a href="${behanceUrl}" target="_blank" rel="noopener noreferrer" class="social-icon behance" onclick="event.stopPropagation()" title="Behance">Bē</a>`;
+            }
+            
+            if (hasValue(creative['NUMBER 1'])) {
+                const whatsappUrl = `https://wa.me/${formatPhoneForWhatsApp(creative['NUMBER 1'])}`;
+                socialIconsHTML += `<a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer" class="social-icon whatsapp" onclick="event.stopPropagation()" title="WhatsApp">WA</a>`;
+            }
+
+            // Build card content dynamically
+            const displayName = hasValue(creative.Name) ? creative.Name : 'Creative';
+            const displayCompany = hasValue(creative.Company) ? creative.Company : (hasValue(creative.NOTES) ? creative.NOTES.substring(0, 80) + '...' : '');
+
+            card.innerHTML = `
+                <div class="card-image">
+                    ${hasValue(creative.PHOTO) ? 
+                        `<img src="${creative.PHOTO}" alt="${displayName}">` : 
+                        `<div class="card-image-placeholder">${initials}</div>`
+                    }
+                    ${hasValue(creative.REEL) ? `<div class="reel-badge">🎬 REEL</div>` : ''}
+                </div>
+                <div class="card-content">
+                    ${hasValue(creative.FIELD) ? `<div class="card-meta ${categoryClass}">${creative.FIELD.toUpperCase()}</div>` : ''}
+                    <div class="card-name">${displayName}</div>
+                    ${displayCompany ? `<div class="card-title">${displayCompany}</div>` : ''}
+                    ${socialIconsHTML ? `<div class="card-social">${socialIconsHTML}</div>` : ''}
+                </div>
+            `;
+
+            return card;
+        }
+
+        // ============================================
+        // MODAL FUNCTIONS
+        // ============================================
+        function openModal(creative) {
+            const modal = document.getElementById('modal');
+            const modalContent = document.getElementById('modalContent');
+            const initials = hasValue(creative.Name) ? creative.Name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : '?';
+            const categoryClass = getCategoryClass(creative.FIELD);
+
+            const hasPortfolio = hasValue(creative.ONLINEPORTFOLIO);
+            const hasReel = hasValue(creative.REEL);
+            const hasEmail = hasValue(creative.MAIL);
+            const hasPhone = hasValue(creative['NUMBER 1']);
+
+            // Build large social icons for modal - only if they have values
+            let socialLinksHTML = '';
+            
+            const modalInstagramUrl = getSocialUrl('instagram', creative.Instagram);
+            if (modalInstagramUrl) {
+                socialLinksHTML += `<a href="${modalInstagramUrl}" target="_blank" rel="noopener noreferrer" class="social-link-large instagram" title="Instagram">IG</a>`;
+            }
+            
+            const modalLinkedinUrl = getSocialUrl('linkedin', creative.LinkedIn);
+            if (modalLinkedinUrl) {
+                socialLinksHTML += `<a href="${modalLinkedinUrl}" target="_blank" rel="noopener noreferrer" class="social-link-large linkedin" title="LinkedIn">in</a>`;
+            }
+            
+            const modalTwitterUrl = getSocialUrl('twitter', creative.Twitter);
+            if (modalTwitterUrl) {
+                socialLinksHTML += `<a href="${modalTwitterUrl}" target="_blank" rel="noopener noreferrer" class="social-link-large twitter" title="X (Twitter)">𝕏</a>`;
+            }
+            
+            const modalFacebookUrl = getSocialUrl('facebook', creative.Facebook);
+            if (modalFacebookUrl) {
+                socialLinksHTML += `<a href="${modalFacebookUrl}" target="_blank" rel="noopener noreferrer" class="social-link-large facebook" title="Facebook">f</a>`;
+            }
+            
+            const modalBehanceUrl = getSocialUrl('behance', creative.Behance);
+            if (modalBehanceUrl) {
+                socialLinksHTML += `<a href="${modalBehanceUrl}" target="_blank" rel="noopener noreferrer" class="social-link-large behance" title="Behance">Bē</a>`;
+            }
+
+            // Build action buttons dynamically - only show if they have values
+            let actionsHTML = '';
+            if (hasEmail) {
+                actionsHTML += `<a href="mailto:${creative.MAIL}" class="action-btn btn-email" onclick="event.stopPropagation()">📧 Email</a>`;
+            }
+            if (hasPhone) {
+                actionsHTML += `<a href="tel:${creative['NUMBER 1']}" class="action-btn btn-phone" onclick="event.stopPropagation()">📞 Phone</a>`;
+                actionsHTML += `<a href="https://wa.me/${formatPhoneForWhatsApp(creative['NUMBER 1'])}" target="_blank" rel="noopener noreferrer" class="action-btn btn-whatsapp" onclick="event.stopPropagation()">WhatsApp</a>`;
+            }
+            if (hasPortfolio) {
+                actionsHTML += `<a href="${creative.ONLINEPORTFOLIO}" target="_blank" rel="noopener noreferrer" class="action-btn btn-portfolio" onclick="event.stopPropagation()">🌐 Portfolio</a>`;
+            }
+            // Only show reel button if video cannot be embedded
+            if (hasReel && !getVideoEmbedUrl(creative.REEL)) {
+                actionsHTML += `<a href="${creative.REEL}" target="_blank" rel="noopener noreferrer" class="action-btn btn-reel" onclick="event.stopPropagation()">▶ View Reel</a>`;
+            }
+
+            const displayName = hasValue(creative.Name) ? creative.Name : 'Creative';
+            const displayCompany = hasValue(creative.Company) ? creative.Company : 'Freelance';
+
+            modalContent.innerHTML = `
+                <div class="modal-header">
+                    <div class="modal-avatar">
+                        ${hasValue(creative.PHOTO) ? `<img src="${creative.PHOTO}" alt="${displayName}">` : initials}
+                    </div>
+                    <div class="modal-name">${displayName}</div>
+                    <div class="modal-tagline">${displayCompany}</div>
+                    ${hasValue(creative.FIELD) ? `<div class="card-meta ${categoryClass}" style="margin-bottom: 20px;">${creative.FIELD.toUpperCase()}</div>` : ''}
+                    ${actionsHTML ? `<div class="modal-actions">${actionsHTML}</div>` : ''}
+                    ${socialLinksHTML ? `<div class="social-links">${socialLinksHTML}</div>` : ''}
+                </div>
+                <div class="modal-body">
+                    ${hasReel ? (() => {
+                        const embedUrl = getVideoEmbedUrl(creative.REEL);
+                        if (embedUrl) {
+                            if (isDirectVideo(embedUrl)) {
+                                return `
+                                <div class="video-container">
+                                    <div class="video-label">▶ Demo Reel</div>
+                                    <div class="video-wrapper">
+                                        <video controls>
+                                            <source src="${embedUrl}" type="video/mp4">
+                                            Your browser does not support the video tag.
+                                        </video>
+                                    </div>
+                                </div>`;
+                            } else {
+                                return `
+                                <div class="video-container">
+                                    <div class="video-label">▶ Demo Reel</div>
+                                    <div class="video-wrapper">
+                                        <iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+                                    </div>
+                                </div>`;
+                            }
+                        }
+                        return '';
+                    })() : ''}
+
+                    ${(hasPortfolio && hasValue(creative.PORTFOLIO_THUMBNAIL)) ? `
+                    <a href="${creative.ONLINEPORTFOLIO}" target="_blank" rel="noopener noreferrer" class="portfolio-preview" onclick="event.stopPropagation()">
+                        <img src="${creative.PORTFOLIO_THUMBNAIL}" alt="Portfolio Preview">
+                        <div class="portfolio-preview-label">
+                            <span>🌐 View Full Portfolio</span>
+                            <span>→</span>
+                        </div>
+                    </a>
+                    ` : ''}
+
+                    ${hasValue(creative.NOTES) ? `
+                    <div class="section">
+                        <div class="section-content">${creative.NOTES}</div>
+                    </div>
+                    ` : ''}
+
+                    ${(hasEmail || hasPhone || hasValue(creative.LOCATION) || hasValue(creative['NUMBER 2'])) ? `
+                    <div class="section">
+                        <div class="section-title">Contact Information</div>
+                        <div class="info-grid">
+                            ${hasEmail ? `
+                            <div class="info-item">
+                                <div class="info-label">Email</div>
+                                <div class="info-value"><a href="mailto:${creative.MAIL}">${creative.MAIL}</a></div>
+                            </div>
+                            ` : ''}
+                            ${hasPhone ? `
+                            <div class="info-item">
+                                <div class="info-label">Phone</div>
+                                <div class="info-value"><a href="tel:${creative['NUMBER 1']}">${creative['NUMBER 1']}</a></div>
+                            </div>
+                            ` : ''}
+                            ${hasValue(creative.LOCATION) ? `
+                            <div class="info-item">
+                                <div class="info-label">Location</div>
+                                <div class="info-value">${creative.LOCATION}</div>
+                            </div>
+                            ` : ''}
+                            ${hasValue(creative['NUMBER 2']) ? `
+                            <div class="info-item">
+                                <div class="info-label">Phone 2</div>
+                                <div class="info-value"><a href="tel:${creative['NUMBER 2']}">${creative['NUMBER 2']}</a></div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${(hasValue(creative.FIELD) || hasValue(creative.LEVEL) || hasValue(creative.SKILLS)) ? `
+                    <div class="section">
+                        <div class="section-title">Professional Details</div>
+                        <div class="info-grid">
+                            ${hasValue(creative.FIELD) ? `
+                            <div class="info-item">
+                                <div class="info-label">Category</div>
+                                <div class="info-value">${creative.FIELD}</div>
+                            </div>
+                            ` : ''}
+                            ${hasValue(creative.LEVEL) ? `
+                            <div class="info-item">
+                                <div class="info-label">Level</div>
+                                <div class="info-value">${creative.LEVEL}</div>
+                            </div>
+                            ` : ''}
+                            ${hasValue(creative.SKILLS) ? `
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Skills</div>
+                                <div class="info-value">${creative.SKILLS}</div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${(hasPortfolio && !hasValue(creative.PORTFOLIO_THUMBNAIL)) ? `
+                    <div class="section">
+                        <div class="section-title">Portfolio & Work</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Portfolio Website</div>
+                                <div class="info-value"><a href="${creative.ONLINEPORTFOLIO}" target="_blank" rel="noopener noreferrer">View complete portfolio →</a></div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            
+            // Stop all videos before closing
+            const iframes = modal.querySelectorAll('iframe');
+            iframes.forEach(iframe => {
+                // Save and reload the src to stop the video
+                const src = iframe.src;
+                iframe.src = '';
+                iframe.src = src;
+            });
+            
+            // Stop HTML5 videos
+            const videos = modal.querySelectorAll('video');
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+            
+            modal.style.display = 'none';
+        }
+
+        // ============================================
+        // FILTER FUNCTIONS
+        // ============================================
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const fieldFilter = document.getElementById('fieldFilter').value;
+            const levelFilter = document.getElementById('levelFilter').value;
+
+            filteredCreatives = allCreatives.filter(creative => {
+                const matchesSearch = !searchTerm || 
+                    (creative.Name && creative.Name.toLowerCase().includes(searchTerm)) ||
+                    (creative.FIELD && creative.FIELD.toLowerCase().includes(searchTerm)) ||
+                    (creative.NOTES && creative.NOTES.toLowerCase().includes(searchTerm)) ||
+                    (creative.Company && creative.Company.toLowerCase().includes(searchTerm)) ||
+                    (creative.SKILLS && creative.SKILLS.toLowerCase().includes(searchTerm)) ||
+                    (creative.LOCATION && creative.LOCATION.toLowerCase().includes(searchTerm));
+
+                const matchesField = !fieldFilter || creative.FIELD === fieldFilter;
+                const matchesLevel = !levelFilter || creative.LEVEL === levelFilter;
+
+                return matchesSearch && matchesField && matchesLevel;
+            });
+
+            renderCreatives(filteredCreatives);
+        }
+
+        // ============================================
+        // POPULATE FILTER DROPDOWNS
+        // ============================================
+        function populateFilters() {
+            const fields = [...new Set(allCreatives.map(c => c.FIELD).filter(f => f))];
+            const levels = [...new Set(allCreatives.map(c => c.LEVEL).filter(l => l))];
+
+            const fieldFilter = document.getElementById('fieldFilter');
+            fields.forEach(field => {
+                const option = document.createElement('option');
+                option.value = field;
+                option.textContent = field;
+                fieldFilter.appendChild(option);
+            });
+
+            const levelFilter = document.getElementById('levelFilter');
+            levels.forEach(level => {
+                const option = document.createElement('option');
+                option.value = level;
+                option.textContent = level;
+                levelFilter.appendChild(option);
+            });
+        }
+
+        // ============================================
+        // UPDATE STATS
+        // ============================================
+        function updateStats() {
+            document.getElementById('totalCount').textContent = allCreatives.length;
+            document.getElementById('showingCount').textContent = filteredCreatives.length;
+        }
+
+        // ============================================
+        // EVENT LISTENERS
+        // ============================================
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('fieldFilter').addEventListener('change', applyFilters);
+        document.getElementById('levelFilter').addEventListener('change', applyFilters);
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        };
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modal = document.getElementById('modal');
+                if (modal.style.display === 'block') {
+                    closeModal();
+                }
+            }
+        });
+
+        // ============================================
+        // INITIALIZE APP
+        // ============================================
+        async function init() {
+            console.log('Initializing app...');
+            console.log('Sheet ID:', SHEET_ID);
+            console.log('Sheet Name:', SHEET_NAME);
+            allCreatives = await fetchData();
+            filteredCreatives = allCreatives;
+            console.log('All creatives loaded:', allCreatives.length);
+            populateFilters();
+            renderCreatives(filteredCreatives);
+        }
+
+        init();
+    </script>
+</body>
+</html>
