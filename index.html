@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelele Collective</title>
+    <title>Creatives Database</title>
     <style>
         * {
             margin: 0;
@@ -59,7 +59,7 @@
             padding: 10px 15px 10px 40px;
             border-radius: 8px;
             color: #ffffff;
-            font-size: 14px;
+            font-size: 16px;
             width: 300px;
             transition: all 0.3s;
         }
@@ -142,7 +142,7 @@
             border-radius: 8px;
             color: #ffffff;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
             min-width: 180px;
         }
 
@@ -159,6 +159,75 @@
 
         .stats {
             margin-bottom: 30px;
+            color: #888;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .stats-left {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .results-per-page {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .results-per-page select {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: #ffffff;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: auto;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-btn {
+            background: #2a2a2a;
+            border: 1px solid #3a3a3a;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #3a3a3a;
+            border-color: #4a90e2;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: #4a90e2;
+            border-color: #4a90e2;
+        }
+
+        .pagination-info {
             color: #888;
             font-size: 14px;
         }
@@ -751,6 +820,7 @@
 
             .search-input {
                 width: 100%;
+                font-size: 16px;
             }
 
             .filter-btn {
@@ -770,6 +840,31 @@
 
             .container {
                 padding: 20px;
+            }
+
+            .stats {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-left {
+                flex-direction: column;
+                align-items: flex-start;
+                width: 100%;
+            }
+
+            .results-per-page {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .pagination {
+                gap: 5px;
+            }
+
+            .pagination-btn {
+                padding: 6px 12px;
+                font-size: 13px;
             }
 
             .grid {
@@ -793,7 +888,7 @@
 </head>
 <body>
     <div class="header">
-        <a href="/" class="logo" style="text-decoration: none; color: inherit; cursor: pointer;" onclick="window.location.reload(); return false;">Kelele Collective</a>
+        <a href="/" class="logo" style="text-decoration: none; color: inherit; cursor: pointer;" onclick="window.location.reload(); return false;">Creatives Database</a>
         <div class="header-controls">
             <div class="search-box">
                 <span class="search-icon">🔍</span>
@@ -819,7 +914,18 @@
 
     <div class="container">
         <div class="stats" id="stats">
-            <span>Showing <strong id="showingCount">0</strong> of <strong id="totalCount">0</strong> creatives</span>
+            <div class="stats-left">
+                <span>Showing <strong id="showingCount">0</strong> of <strong id="totalCount">0</strong> creatives</span>
+                <div class="results-per-page">
+                    <label for="perPageSelect">Show:</label>
+                    <select id="perPageSelect">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="all">All</option>
+                    </select>
+                </div>
+            </div>
         </div>
 
         <div id="loading" class="loading">Loading creatives...</div>
@@ -828,6 +934,8 @@
             <h2>No results found</h2>
             <p>Try adjusting your search or filters</p>
         </div>
+
+        <div id="pagination" class="pagination"></div>
     </div>
 
     <div id="modal" class="modal">
@@ -842,14 +950,16 @@
         // CONFIGURATION
         // ============================================
         const SHEET_ID = '1vQWdKbNtZVvd4mX0CcUUx7Yhhq_qOhVt6i77zukDYS4';
-        const SHEET_NAME = 'kelele_collective';
-        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=96240212`;
+        const SHEET_NAME = 'kelele_colective';
+        const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=774529090`;
 
         // ============================================
         // GLOBAL VARIABLES
         // ============================================
         let allCreatives = [];
         let filteredCreatives = [];
+        let currentPage = 1;
+        let itemsPerPage = 10;
 
         // ============================================
         // UTILITY FUNCTIONS
@@ -1037,24 +1147,139 @@
             const grid = document.getElementById('grid');
             const loading = document.getElementById('loading');
             const noResults = document.getElementById('noResults');
+            const paginationContainer = document.getElementById('pagination');
 
             loading.style.display = 'none';
 
             if (creatives.length === 0) {
                 grid.innerHTML = '';
                 noResults.style.display = 'block';
+                paginationContainer.innerHTML = '';
                 return;
             }
 
             noResults.style.display = 'none';
-            grid.innerHTML = '';
+            
+            // Calculate pagination
+            const totalPages = itemsPerPage === 'all' ? 1 : Math.ceil(creatives.length / itemsPerPage);
+            
+            // Ensure current page is valid
+            if (currentPage > totalPages) {
+                currentPage = totalPages;
+            }
+            if (currentPage < 1) {
+                currentPage = 1;
+            }
 
-            creatives.forEach(creative => {
+            // Get items for current page
+            let itemsToShow;
+            if (itemsPerPage === 'all') {
+                itemsToShow = creatives;
+            } else {
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                itemsToShow = creatives.slice(startIndex, endIndex);
+            }
+
+            // Render cards
+            grid.innerHTML = '';
+            itemsToShow.forEach(creative => {
                 const card = createCard(creative);
                 grid.appendChild(card);
             });
 
-            updateStats();
+            // Render pagination
+            renderPagination(totalPages, creatives.length);
+            
+            // Update stats
+            updateStats(itemsToShow.length, creatives.length);
+
+            // Scroll to top of results on page change
+            if (window.scrollY > 300) {
+                grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // ============================================
+        // RENDER PAGINATION
+        // ============================================
+        function renderPagination(totalPages, totalItems) {
+            const paginationContainer = document.getElementById('pagination');
+            
+            if (itemsPerPage === 'all' || totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+
+            // Previous button
+            paginationHTML += `
+                <button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                    ← Previous
+                </button>
+            `;
+
+            // Page numbers
+            const maxPagesToShow = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            // Adjust start if we're near the end
+            if (endPage - startPage < maxPagesToShow - 1) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            // First page + ellipsis
+            if (startPage > 1) {
+                paginationHTML += `<button class="pagination-btn" onclick="changePage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHTML += `<span class="pagination-info">...</span>`;
+                }
+            }
+
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="changePage(${i})">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // Ellipsis + last page
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<span class="pagination-info">...</span>`;
+                }
+                paginationHTML += `<button class="pagination-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
+            }
+
+            // Next button
+            paginationHTML += `
+                <button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+                    Next →
+                </button>
+            `;
+
+            paginationContainer.innerHTML = paginationHTML;
+        }
+
+        // ============================================
+        // CHANGE PAGE
+        // ============================================
+        function changePage(page) {
+            currentPage = page;
+            renderCreatives(filteredCreatives);
+        }
+
+        // ============================================
+        // CHANGE ITEMS PER PAGE
+        // ============================================
+        function changeItemsPerPage(value) {
+            itemsPerPage = value === 'all' ? 'all' : parseInt(value);
+            currentPage = 1; // Reset to first page
+            renderCreatives(filteredCreatives);
         }
 
         // ============================================
@@ -1362,6 +1587,7 @@
                 return matchesSearch && matchesField && matchesLevel;
             });
 
+            currentPage = 1; // Reset to first page when filtering
             renderCreatives(filteredCreatives);
         }
 
@@ -1392,9 +1618,9 @@
         // ============================================
         // UPDATE STATS
         // ============================================
-        function updateStats() {
+        function updateStats(showing, total) {
             document.getElementById('totalCount').textContent = allCreatives.length;
-            document.getElementById('showingCount').textContent = filteredCreatives.length;
+            document.getElementById('showingCount').textContent = showing || total || 0;
         }
 
         // ============================================
@@ -1403,6 +1629,9 @@
         document.getElementById('searchInput').addEventListener('input', applyFilters);
         document.getElementById('fieldFilter').addEventListener('change', applyFilters);
         document.getElementById('levelFilter').addEventListener('change', applyFilters);
+        document.getElementById('perPageSelect').addEventListener('change', function() {
+            changeItemsPerPage(this.value);
+        });
 
         window.onclick = function(event) {
             const modal = document.getElementById('modal');
