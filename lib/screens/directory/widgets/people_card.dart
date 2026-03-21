@@ -7,8 +7,15 @@ final _defaultCovers = [
   const LinearGradient(colors: [Color(0xFF667eea), Color(0xFF764ba2)]),
   const LinearGradient(colors: [Color(0xFFf093fb), Color(0xFFf5576c)]),
   const LinearGradient(colors: [Color(0xFF4facfe), Color(0xFF00f2fe)]),
-  const LinearGradient(colors: [Color(0xFF43e97b), Color(0xFF38f9d7)]),
 ];
+
+/// Builds an image widget that handles both asset and network paths.
+Widget _buildCoverImage(String url, {BoxFit fit = BoxFit.cover, Widget? fallback}) {
+  if (url.startsWith('assets/')) {
+    return Image.asset(url, fit: fit, errorBuilder: (_, __, ___) => fallback ?? const SizedBox.shrink());
+  }
+  return Image.network(url, fit: fit, errorBuilder: (_, __, ___) => fallback ?? const SizedBox.shrink());
+}
 
 class PeopleCard extends StatefulWidget {
   final Creator creator;
@@ -22,18 +29,27 @@ class PeopleCard extends StatefulWidget {
 class _PeopleCardState extends State<PeopleCard> {
   bool _hovered = false;
 
+  /// Returns a widget showing the portfolio cover image or gradient fallback.
+  Widget _coverTile(int index) {
+    final c = widget.creator;
+    if (index < c.portfolio.length && c.portfolio[index].hasCoverImage) {
+      final p = c.portfolio[index];
+      return _buildCoverImage(
+        p.coverImageUrl,
+        fallback: Container(decoration: BoxDecoration(gradient: p.cover)),
+      );
+    }
+    // Gradient fallback
+    final gradient = index < c.portfolio.length
+        ? c.portfolio[index].cover
+        : _defaultCovers[index % _defaultCovers.length];
+    return Container(decoration: BoxDecoration(gradient: gradient));
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = widget.creator;
-    // Build thumbnail covers (fill to 4)
-    final covers = <LinearGradient>[];
-    for (var i = 0; i < 4; i++) {
-      if (i < c.portfolio.length) {
-        covers.add(c.portfolio[i].cover);
-      } else {
-        covers.add(_defaultCovers[i % 4]);
-      }
-    }
+    final isAssetPhoto = c.profilePhotoUrl.startsWith('assets/');
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -42,6 +58,7 @@ class _PeopleCardState extends State<PeopleCard> {
         onTap: widget.onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
+          clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -49,193 +66,141 @@ class _PeopleCardState extends State<PeopleCard> {
               color: _hovered ? KeleleColors.pinkLight : KeleleColors.grayBorder,
             ),
             boxShadow: _hovered
-                ? [BoxShadow(color: Colors.black.withOpacity(0.06), blurRadius: 24, offset: const Offset(0, 8))]
+                ? [BoxShadow(color: Colors.black.withValues(alpha: 0.06), blurRadius: 24, offset: const Offset(0, 8))]
                 : [],
           ),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
-              // Thumbnail strip
-              SizedBox(
-                height: 56,
-                child: ClipRRect(
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(11)),
-                  child: Row(
-                    children: covers
-                        .map((g) => Expanded(
-                            child: Container(decoration: BoxDecoration(gradient: g))))
-                        .toList(),
-                  ),
-                ),
-              ),
-
-              // Avatar
-              Transform.translate(
-                offset: const Offset(0, -28),
-                child: Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: KeleleColors.pink,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white, width: 3),
-                    boxShadow: [
-                      BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2)),
-                    ],
-                  ),
-                  child: Center(
-                    child: Text(c.initials,
-                        style: GoogleFonts.spaceGrotesk(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
-                        )),
-                  ),
-                ),
-              ),
-
-              // Body (pull up to close gap)
-              Transform.translate(
-                offset: const Offset(0, -18),
+              // ─── IMAGE COLLAGE ───────────────────
+              Expanded(
                 child: Column(
                   children: [
-                    // Name
-                    Text(c.name,
-                        style: GoogleFonts.spaceGrotesk(
-                            fontSize: 15, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 2),
-                    // Location
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.location_on,
-                            size: 12, color: KeleleColors.grayMid),
-                        const SizedBox(width: 3),
-                        Text(c.location,
-                            style: TextStyle(
-                                fontSize: 12, color: KeleleColors.grayMid)),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    // Tags
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 6,
-                      children: [
-                        Text(c.primarySkill,
-                            style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: KeleleColors.pink)),
-                        ...c.skills
-                            .where((s) => s != c.primarySkill)
-                            .map((s) => Text(s,
-                                style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: KeleleColors.green))),
-                        Text(c.priceLabel,
-                            style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: KeleleColors.purple)),
-                      ],
-                    ),
-                    if (c.featured) ...[
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: KeleleColors.greenGlow,
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle,
-                                size: 12, color: KeleleColors.green),
-                            const SizedBox(width: 4),
-                            Text('Featured',
-                                style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: KeleleColors.green)),
-                          ],
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 14),
-                    // Stats
-                    Container(
-                      decoration: BoxDecoration(
-                        border:
-                            Border(top: BorderSide(color: KeleleColors.grayBorder)),
-                      ),
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Row(
-                        children: [
-                          _Stat('${c.portfolio.length}', 'Projects'),
-                          _Stat('${c.skills.length}', 'Skills'),
-                          _Stat(c.levelLabel, 'Level'),
-                        ],
-                      ),
-                    ),
-                    // Action button
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                    // Main image (top, ~60%)
+                    Expanded(
+                      flex: 3,
                       child: SizedBox(
                         width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: widget.onTap,
-                          style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            textStyle: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w500),
-                          ),
-                          child: Text('View ${c.name.split(' ').first}'),
-                        ),
+                        child: _coverTile(0),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    // Two smaller images side by side (~25%)
+                    Expanded(
+                      flex: 2,
+                      child: Row(
+                        children: [
+                          Expanded(child: _coverTile(1)),
+                          const SizedBox(width: 2),
+                          Expanded(child: _coverTile(2)),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
+
+              // ─── PROFILE CIRCLE + TEXT ──────────────
+              Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.topCenter,
+                children: [
+                  // Text area
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 28, 12, 12),
+                    child: Column(
+                      children: [
+                        Text(
+                          c.name,
+                          style: GoogleFonts.spaceGrotesk(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                c.mainSkill.discipline,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: KeleleColors.pink,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: Icon(Icons.circle, size: 3, color: KeleleColors.grayMid),
+                            ),
+                            Icon(Icons.location_on, size: 11, color: KeleleColors.grayMid),
+                            const SizedBox(width: 2),
+                            Flexible(
+                              child: Text(
+                                c.location,
+                                style: TextStyle(fontSize: 13, color: KeleleColors.grayMid),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (c.status == CreatorStatus.verifiedEmerging)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: KeleleColors.orangeGlow,
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: const Text(
+                                'Emerging',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: KeleleColors.orange,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+
+                  // Profile photo circle — always shows image
+                  Positioned(
+                    top: -24,
+                    child: Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: KeleleColors.grayLight,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: isAssetPhoto
+                          ? Image.asset(c.profilePhotoUrl, fit: BoxFit.cover)
+                          : Image.network(c.profilePhotoUrl, fit: BoxFit.cover),
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  final String value, label;
-  const _Stat(this.value, this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 2),
-        decoration: BoxDecoration(
-          border: Border(right: BorderSide(color: KeleleColors.grayBorder.withOpacity(0.5))),
-        ),
-        child: Column(
-          children: [
-            Text(value,
-                style: GoogleFonts.spaceGrotesk(
-                    fontSize: 14, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 1),
-            Text(label.toUpperCase(),
-                style: TextStyle(
-                    fontSize: 10,
-                    color: KeleleColors.grayMid,
-                    letterSpacing: 0.5)),
-          ],
         ),
       ),
     );

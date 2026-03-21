@@ -33,15 +33,13 @@ class _CreativeDashboardState extends ConsumerState<CreativeDashboard>
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authProvider);
+    final user = ref.watch(currentUserProvider);
     final creators = ref.watch(creatorsProvider);
     final myProfile = creators.where((c) => c.email == user?.email).firstOrNull;
 
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1000),
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Header
@@ -101,7 +99,6 @@ class _CreativeDashboardState extends ConsumerState<CreativeDashboard>
               ),
             ),
           ],
-        ),
       ),
     );
   }
@@ -133,7 +130,7 @@ class _ProfileTab extends StatelessWidget {
               _InfoRow('Name', profile!.name),
               _InfoRow('Email', profile!.email),
               _InfoRow('Location', profile!.location),
-              _InfoRow('Primary Skill', profile!.primarySkill),
+              _InfoRow('Primary Skill', profile!.mainSkill.discipline),
               _InfoRow('Level', profile!.levelLabel),
               _InfoRow('Price Range', profile!.priceLabel),
               const SizedBox(height: 16),
@@ -197,7 +194,7 @@ class _PortfolioTab extends StatelessWidget {
                     child: Center(
                       child: Text(p.title.split(' ').map((w) => w.isNotEmpty ? w[0] : '').join(),
                           style: GoogleFonts.spaceGrotesk(
-                              fontSize: 32, fontWeight: FontWeight.w700, color: Colors.white.withOpacity(0.15))),
+                              fontSize: 32, fontWeight: FontWeight.w700, color: Colors.white.withValues(alpha: 0.15))),
                     ),
                   ),
                 ),
@@ -211,7 +208,7 @@ class _PortfolioTab extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(p.title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          Text(p.skill, style: TextStyle(fontSize: 11, color: KeleleColors.grayMid)),
+                          Text(p.skill, style: TextStyle(fontSize: 13, color: KeleleColors.grayMid)),
                         ],
                       ),
                     ),
@@ -257,7 +254,7 @@ class _VettingTab extends StatelessWidget {
               if (profile!.reviewedBy.isNotEmpty) ...[
                 const SizedBox(height: 12),
                 Text('Reviewed by ${profile!.reviewedBy} on ${profile!.reviewedAt}',
-                    style: TextStyle(fontSize: 12, color: KeleleColors.grayMid)),
+                    style: TextStyle(fontSize: 14, color: KeleleColors.grayMid)),
               ],
             ] else
               Text('No vetting information available.',

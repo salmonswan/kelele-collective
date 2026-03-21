@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/creator_provider.dart';
@@ -11,16 +12,14 @@ class FinderDashboard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(authProvider);
+    final user = ref.watch(currentUserProvider);
     final creators = ref.watch(creatorsProvider);
     final bookmarks = ref.watch(bookmarksProvider);
     final saved = creators.where((c) => bookmarks.contains(c.id)).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1000),
-        child: Column(
+      child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -76,7 +75,7 @@ class FinderDashboard extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text('Save creators from the directory to see them here.',
                         style: TextStyle(
-                            fontSize: 12, color: KeleleColors.grayMid)),
+                            fontSize: 14, color: KeleleColors.grayMid)),
                   ],
                 ),
               )
@@ -94,11 +93,10 @@ class FinderDashboard extends ConsumerWidget {
                 itemCount: saved.length,
                 itemBuilder: (ctx, i) => PeopleCard(
                   creator: saved[i],
-                  onTap: () {}, // Could navigate to profile
+                  onTap: () => context.push('/profile/${saved[i].id}'),
                 ),
               ),
           ],
-        ),
       ),
     );
   }

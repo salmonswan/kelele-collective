@@ -33,13 +33,13 @@ class _ProjectCardState extends State<ProjectCard> {
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
           transform: _hovered
-              ? (Matrix4.identity()..translate(0.0, -4.0))
+              ? (Matrix4.identity()..translateByDouble(0.0, -4.0, 0.0, 0.0))
               : Matrix4.identity(),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
             boxShadow: _hovered
-                ? [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 32, offset: const Offset(0, 12))]
-                : [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 8, offset: const Offset(0, 2))],
+                ? [BoxShadow(color: Colors.black.withValues(alpha:0.1), blurRadius: 32, offset: const Offset(0, 12))]
+                : [BoxShadow(color: Colors.black.withValues(alpha:0.03), blurRadius: 8, offset: const Offset(0, 2))],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(8),
@@ -50,7 +50,15 @@ class _ProjectCardState extends State<ProjectCard> {
                 Expanded(
                   child: Container(
                     width: double.infinity,
-                    decoration: BoxDecoration(gradient: widget.project.cover),
+                    decoration: BoxDecoration(
+                      gradient: widget.project.cover,
+                      image: widget.project.hasCoverImage
+                          ? DecorationImage(
+                              image: NetworkImage(widget.project.coverImageUrl),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
                     child: Stack(
                       children: [
                         Center(
@@ -59,7 +67,7 @@ class _ProjectCardState extends State<ProjectCard> {
                             style: GoogleFonts.spaceGrotesk(
                               fontSize: 48,
                               fontWeight: FontWeight.w700,
-                              color: Colors.white.withOpacity(0.12),
+                              color: Colors.white.withValues(alpha:0.12),
                             ),
                           ),
                         ),
@@ -78,7 +86,7 @@ class _ProjectCardState extends State<ProjectCard> {
                                 gradient: LinearGradient(
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
-                                  colors: [Colors.transparent, Colors.black.withOpacity(0.5)],
+                                  colors: [Colors.transparent, Colors.black.withValues(alpha:0.5)],
                                 ),
                               ),
                               child: Text(
@@ -121,7 +129,7 @@ class _ProjectCardState extends State<ProjectCard> {
                             child: Text(
                               widget.creator.initials,
                               style: GoogleFonts.spaceGrotesk(
-                                fontSize: 8,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w600,
                                 color: Colors.white,
                               ),
@@ -131,7 +139,7 @@ class _ProjectCardState extends State<ProjectCard> {
                           Text(
                             widget.creator.name,
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: KeleleColors.grayMid,
                             ),

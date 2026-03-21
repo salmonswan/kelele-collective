@@ -1,13 +1,14 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../models/creator.dart';
 import '../../providers/creator_provider.dart';
-import '../../data/mock_data.dart';
 import '../../theme/app_theme.dart';
 import 'widgets/project_card.dart';
 import 'widgets/people_card.dart';
-import 'widgets/profile_panel.dart';
 import 'widgets/project_lightbox.dart';
+import 'widgets/guide_wizard.dart';
 
 class DirectoryScreen extends ConsumerStatefulWidget {
   const DirectoryScreen({super.key});
@@ -17,31 +18,65 @@ class DirectoryScreen extends ConsumerStatefulWidget {
 }
 
 class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
-  int? _panelCreatorId;
-  ({int projectId, int creatorId})? _lightboxData;
+  ({String projectId, String creatorId})? _lightboxData;
 
-  void _openPanel(int creatorId) => setState(() => _panelCreatorId = creatorId);
-  void _closePanel() => setState(() => _panelCreatorId = null);
-
-  void _openLightbox(int projectId, int creatorId) =>
+  void _openLightbox(String projectId, String creatorId) =>
       setState(() => _lightboxData = (projectId: projectId, creatorId: creatorId));
   void _closeLightbox() => setState(() => _lightboxData = null);
+
+  bool _guideShown = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Show guide wizard on first build if provider says to
+    if (!_guideShown) {
+      _guideShown = true;
+      final show = ref.read(showGuideProvider);
+      if (show) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showGuide();
+        });
+      }
+    }
+  }
+
+  void _showGuide() {
+    ref.read(showGuideProvider.notifier).state = false;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => GuideWizard(ref: ref),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final view = ref.watch(directoryViewProvider);
-    final query = ref.watch(searchQueryProvider);
     final selectedSkill = ref.watch(selectedSkillProvider);
+    final selectedLocation = ref.watch(selectedLocationProvider);
+    final selectedLevel = ref.watch(selectedLevelProvider);
+    final selectedPrice = ref.watch(selectedPriceProvider);
     final filteredProjects = ref.watch(filteredProjectsProvider);
-    final filteredCreators = ref.watch(filteredCreatorsProvider);
-    final creators = ref.watch(creatorsProvider);
-
-    final panelCreator = _panelCreatorId != null
-        ? creators.where((c) => c.id == _panelCreatorId).firstOrNull
-        : null;
+    final hasActiveFilters = selectedSkill != null ||
+        selectedLocation != null ||
+        selectedLevel != null ||
+        selectedPrice != null;
 
     return Stack(
       children: [
+        // Noise texture background
+        Positioned.fill(
+          child: Opacity(
+            opacity: 0.35,
+            child: Image.asset(
+              'assets/images/noise-light3.png',
+              fit: BoxFit.cover,
+              filterQuality: FilterQuality.none,
+            ),
+          ),
+        ),
         Column(
           children: [
             // ─── STICKY TOP BAR ────────────────
@@ -57,10 +92,12 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                       children: [
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
                               color: KeleleColors.grayLight,
-                              border: Border.all(color: KeleleColors.grayBorder),
+                              border:
+                                  Border.all(color: KeleleColors.grayBorder),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Row(
@@ -89,7 +126,36 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 16),
+                        const SizedBox(width: 12),
+                        // Guide button
+                        if (view == DirectoryView.people)
+                          IconButton(
+                            onPressed: _showGuide,
+                            icon: const Icon(Icons.explore_outlined),
+                            tooltip: 'Find your match',
+                            style: IconButton.styleFrom(
+                              backgroundColor: KeleleColors.pinkGlow,
+                              foregroundColor: KeleleColors.pink,
+                            ),
+                          ),
+                        // Shuffle button
+                        if (view == DirectoryView.people)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: IconButton(
+                              onPressed: () => ref
+                                  .read(shuffleSeedProvider.notifier)
+                                  .state = DateTime.now()
+                                      .millisecondsSinceEpoch,
+                              icon: const Icon(Icons.shuffle),
+                              tooltip: 'Shuffle',
+                              style: IconButton.styleFrom(
+                                backgroundColor: KeleleColors.grayLight,
+                                foregroundColor: KeleleColors.dark,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(width: 8),
                         // View toggle
                         Container(
                           decoration: BoxDecoration(
@@ -118,31 +184,93 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                       ],
                     ),
                   ),
-                  // Skill pills
-                  SizedBox(
-                    height: 44,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      children: [
-                        _SkillPill(
-                          label: 'All',
-                          active: selectedSkill == null,
-                          isPrimary: true,
-                          onTap: () => ref
-                              .read(selectedSkillProvider.notifier)
-                              .state = null,
-                        ),
-                        ...skillsList.map((s) => _SkillPill(
-                              label: s,
-                              active: selectedSkill == s,
-                              onTap: () => ref
-                                  .read(selectedSkillProvider.notifier)
-                                  .state = selectedSkill == s ? null : s,
-                            )),
-                      ],
+                  // Active filter chips
+                  if (hasActiveFilters)
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                      child: Row(
+                        children: [
+                          Icon(Icons.filter_list,
+                              size: 16, color: KeleleColors.grayMid),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  if (selectedSkill != null)
+                                    _ActiveFilter(
+                                      label: selectedSkill,
+                                      onRemove: () => ref
+                                          .read(
+                                              selectedSkillProvider.notifier)
+                                          .state = null,
+                                    ),
+                                  if (selectedLocation != null) ...[
+                                    if (selectedSkill != null)
+                                      const SizedBox(width: 8),
+                                    _ActiveFilter(
+                                      label: selectedLocation,
+                                      onRemove: () => ref
+                                          .read(selectedLocationProvider
+                                              .notifier)
+                                          .state = null,
+                                    ),
+                                  ],
+                                  if (selectedLevel != null) ...[
+                                    const SizedBox(width: 8),
+                                    _ActiveFilter(
+                                      label: selectedLevel == 3
+                                          ? 'Expert'
+                                          : selectedLevel == 2
+                                              ? 'Skilled'
+                                              : 'Emerging',
+                                      onRemove: () => ref
+                                          .read(
+                                              selectedLevelProvider.notifier)
+                                          .state = null,
+                                    ),
+                                  ],
+                                  if (selectedPrice != null) ...[
+                                    const SizedBox(width: 8),
+                                    _ActiveFilter(
+                                      label: selectedPrice == PriceRange.budget
+                                          ? 'Budget'
+                                          : selectedPrice == PriceRange.mid
+                                              ? 'Mid-range'
+                                              : 'Premium',
+                                      onRemove: () => ref
+                                          .read(
+                                              selectedPriceProvider.notifier)
+                                          .state = null,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            onTap: () {
+                              ref.read(selectedSkillProvider.notifier).state =
+                                  null;
+                              ref
+                                  .read(selectedLocationProvider.notifier)
+                                  .state = null;
+                              ref.read(selectedLevelProvider.notifier).state =
+                                  null;
+                              ref.read(selectedPriceProvider.notifier).state =
+                                  null;
+                            },
+                            child: Text('Clear all',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    color: KeleleColors.pink,
+                                    fontWeight: FontWeight.w500)),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
                   const Divider(height: 1),
                 ],
               ),
@@ -155,24 +283,10 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                       projects: filteredProjects,
                       onOpenLightbox: _openLightbox,
                     )
-                  : _PeopleView(
-                      creators: filteredCreators,
-                      onOpenPanel: _openPanel,
-                    ),
+                  : const _PeopleView(),
             ),
           ],
         ),
-
-        // Profile slide panel
-        if (panelCreator != null)
-          ProfilePanel(
-            creator: panelCreator,
-            onClose: _closePanel,
-            onViewFull: () {
-              _closePanel();
-              // Navigate via GoRouter
-            },
-          ),
 
         // Project lightbox
         if (_lightboxData != null)
@@ -182,7 +296,7 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
             onClose: _closeLightbox,
             onViewCreator: (id) {
               _closeLightbox();
-              _openPanel(id);
+              context.push('/profile/$id');
             },
           ),
       ],
@@ -193,9 +307,10 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
 // ─── PROJECTS GRID ──────────────────────────────
 class _ProjectsView extends StatelessWidget {
   final List<({PortfolioItem project, Creator creator})> projects;
-  final void Function(int projectId, int creatorId) onOpenLightbox;
+  final void Function(String projectId, String creatorId) onOpenLightbox;
 
-  const _ProjectsView({required this.projects, required this.onOpenLightbox});
+  const _ProjectsView(
+      {required this.projects, required this.onOpenLightbox});
 
   @override
   Widget build(BuildContext context) {
@@ -210,8 +325,9 @@ class _ProjectsView extends StatelessWidget {
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
           sliver: SliverToBoxAdapter(
-            child: Text('${projects.length} project${projects.length != 1 ? 's' : ''}',
-                style: TextStyle(fontSize: 12, color: KeleleColors.grayMid)),
+            child: Text(
+                '${projects.length} project${projects.length != 1 ? 's' : ''}',
+                style: TextStyle(fontSize: 14, color: KeleleColors.grayMid)),
           ),
         ),
         SliverPadding(
@@ -223,7 +339,8 @@ class _ProjectsView extends StatelessWidget {
                 return ProjectCard(
                   project: entry.project,
                   creator: entry.creator,
-                  onTap: () => onOpenLightbox(entry.project.id, entry.creator.id),
+                  onTap: () =>
+                      onOpenLightbox(entry.project.id, entry.creator.id),
                 );
               },
               childCount: projects.length,
@@ -241,15 +358,58 @@ class _ProjectsView extends StatelessWidget {
   }
 }
 
-// ─── PEOPLE GRID ────────────────────────────────
-class _PeopleView extends StatelessWidget {
-  final List<Creator> creators;
-  final void Function(int creatorId) onOpenPanel;
+// ─── PEOPLE GRID (with shuffle animation) ───────
+class _PeopleView extends ConsumerStatefulWidget {
+  const _PeopleView();
 
-  const _PeopleView({required this.creators, required this.onOpenPanel});
+  @override
+  ConsumerState<_PeopleView> createState() => _PeopleViewState();
+}
+
+class _PeopleViewState extends ConsumerState<_PeopleView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shuffleAnim;
+  List<double> _randomAngles = [];
+  int _lastSeed = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _shuffleAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+  }
+
+  @override
+  void dispose() {
+    _shuffleAnim.dispose();
+    super.dispose();
+  }
+
+  void _triggerShuffle(int creatorCount) {
+    // Generate random rotation angles for each card
+    final rng = Random();
+    _randomAngles = List.generate(
+      creatorCount,
+      (_) => (rng.nextDouble() - 0.5) * 0.15, // ±~4.3 degrees in radians
+    );
+    _shuffleAnim.forward(from: 0);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final creators = ref.watch(shuffledCreatorsProvider);
+    final seed = ref.watch(shuffleSeedProvider);
+
+    // Trigger animation when seed changes
+    if (seed != _lastSeed && seed != 0) {
+      _lastSeed = seed;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _triggerShuffle(creators.length);
+      });
+    }
+
     if (creators.isEmpty) {
       return Center(
         child: Text('No creators match your search',
@@ -263,24 +423,70 @@ class _PeopleView extends StatelessWidget {
           sliver: SliverToBoxAdapter(
             child: Text(
                 '${creators.length} creator${creators.length != 1 ? 's' : ''}',
-                style: TextStyle(fontSize: 12, color: KeleleColors.grayMid)),
+                style: TextStyle(fontSize: 14, color: KeleleColors.grayMid)),
           ),
         ),
         SliverPadding(
           padding: const EdgeInsets.all(24),
           sliver: SliverGrid(
             delegate: SliverChildBuilderDelegate(
-              (ctx, i) => PeopleCard(
-                creator: creators[i],
-                onTap: () => onOpenPanel(creators[i].id),
-              ),
+              (ctx, i) {
+                return AnimatedBuilder(
+                  animation: _shuffleAnim,
+                  builder: (context, child) {
+                    final t = _shuffleAnim.value;
+                    // Phase 1 (0→0.4): scale down, rotate, fade
+                    // Phase 2 (0.4→1.0): bounce back
+                    double scale;
+                    double rotation;
+                    double opacity;
+
+                    if (t <= 0.4) {
+                      // Scatter phase
+                      final p = t / 0.4;
+                      scale = 1.0 - (0.15 * Curves.easeOut.transform(p));
+                      rotation = i < _randomAngles.length
+                          ? _randomAngles[i] * Curves.easeOut.transform(p)
+                          : 0;
+                      opacity = 1.0 - (0.4 * p);
+                    } else {
+                      // Bounce-back phase
+                      final p = (t - 0.4) / 0.6;
+                      final bounce = Curves.bounceOut.transform(p);
+                      scale = 0.85 + (0.15 * bounce);
+                      rotation = i < _randomAngles.length
+                          ? _randomAngles[i] * (1.0 - bounce)
+                          : 0;
+                      opacity = 0.6 + (0.4 * bounce);
+                    }
+
+                    return Opacity(
+                      opacity: _shuffleAnim.isAnimating ? opacity : 1.0,
+                      child: Transform(
+                        alignment: Alignment.center,
+                        transform: _shuffleAnim.isAnimating
+                            ? (Matrix4.identity()
+                              ..scaleByDouble(scale, scale, 1.0, 1.0)
+                              ..rotateZ(rotation))
+                            : Matrix4.identity(),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: PeopleCard(
+                    key: ValueKey(creators[i].id),
+                    creator: creators[i],
+                    onTap: () => context.push('/profile/${creators[i].id}'),
+                  ),
+                );
+              },
               childCount: creators.length,
             ),
             gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 300,
               mainAxisSpacing: 20,
               crossAxisSpacing: 20,
-              childAspectRatio: 0.68,
+              childAspectRatio: 0.82,
             ),
           ),
         ),
@@ -325,39 +531,35 @@ class _ViewToggle extends StatelessWidget {
   }
 }
 
-// ─── SKILL PILL ─────────────────────────────────
-class _SkillPill extends StatelessWidget {
+// ─── ACTIVE FILTER CHIP ─────────────────────────
+class _ActiveFilter extends StatelessWidget {
   final String label;
-  final bool active;
-  final bool isPrimary;
-  final VoidCallback onTap;
-
-  const _SkillPill(
-      {required this.label,
-      required this.active,
-      required this.onTap,
-      this.isPrimary = false});
+  final VoidCallback onRemove;
+  const _ActiveFilter({required this.label, required this.onRemove});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Chip(
-          label: Text(label),
-          backgroundColor: active
-              ? (isPrimary ? KeleleColors.pink : KeleleColors.dark)
-              : KeleleColors.grayLight,
-          labelStyle: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: active ? Colors.white : KeleleColors.dark,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: KeleleColors.pinkGlow,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: KeleleColors.pink)),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: onRemove,
+            child:
+                const Icon(Icons.close, size: 14, color: KeleleColors.pink),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          visualDensity: VisualDensity.compact,
-        ),
+        ],
       ),
     );
   }
