@@ -120,13 +120,14 @@ class _AppShellState extends ConsumerState<AppShell>
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: ElevatedButton.icon(
-                onPressed: () {
+                onPressed: () async {
                   if (useMockData) {
                     ref.read(mockAuthProvider.notifier).logout();
                   } else {
-                    ref.read(authServiceProvider).signOut();
+                    await ref.read(authServiceProvider).signOut();
                   }
-                  context.go('/login');
+                  ref.read(isGuestProvider.notifier).state = false;
+                  if (context.mounted) context.go('/login');
                 },
                 icon: const Icon(Icons.person_add_outlined, size: 16),
                 label: const Text('Sign Up'),
@@ -214,14 +215,15 @@ class _AppShellState extends ConsumerState<AppShell>
                   ),
                 ),
               ],
-              onSelected: (v) {
+              onSelected: (v) async {
                 if (v == 'logout') {
                   if (useMockData) {
                     ref.read(mockAuthProvider.notifier).logout();
                   } else {
-                    ref.read(authServiceProvider).signOut();
+                    await ref.read(authServiceProvider).signOut();
                   }
-                  context.go('/login');
+                  ref.read(isGuestProvider.notifier).state = false;
+                  if (context.mounted) context.go('/login');
                 }
               },
             ),

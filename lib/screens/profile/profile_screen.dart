@@ -695,19 +695,22 @@ class _LinkUpCard extends StatelessWidget {
                     Expanded(
                       child: isGuest
                           ? ElevatedButton.icon(
-                              onPressed: () {
+                              onPressed: () async {
                                 if (useMockData) {
                                   ref
                                       .read(mockAuthProvider.notifier)
                                       .logout();
                                 } else {
-                                  ref
+                                  await ref
                                       .read(authServiceProvider)
                                       .signOut();
                                 }
-                                Navigator.of(context)
-                                    .popUntil((route) => route.isFirst);
-                                GoRouter.of(context).go('/login');
+                                ref.read(isGuestProvider.notifier).state = false;
+                                if (context.mounted) {
+                                  Navigator.of(context)
+                                      .popUntil((route) => route.isFirst);
+                                  GoRouter.of(context).go('/login');
+                                }
                               },
                               icon: const Icon(
                                   Icons.person_add_outlined,
