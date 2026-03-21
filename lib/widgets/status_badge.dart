@@ -8,10 +8,12 @@ class StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, bg, fg) = switch (status) {
-      CreatorStatus.verified => ('Verified', KeleleColors.greenGlow, KeleleColors.green),
-      CreatorStatus.pending => ('Pending', KeleleColors.orangeGlow, KeleleColors.orange),
-      CreatorStatus.notYet => ('Not Yet', KeleleColors.redGlow, KeleleColors.red),
+    final (label, icon, bg, fg) = switch (status) {
+      CreatorStatus.verified => ('Verified', Icons.check_circle, KeleleColors.greenGlow, KeleleColors.green),
+      CreatorStatus.verifiedEmerging => ('Emerging', Icons.trending_up, const Color(0xFFE0F7FA), const Color(0xFF00897B)),
+      CreatorStatus.pending => ('Pending', Icons.access_time, KeleleColors.orangeGlow, KeleleColors.orange),
+      CreatorStatus.notYet => ('Not Yet', Icons.pause_circle, KeleleColors.orangeGlow, KeleleColors.orange),
+      CreatorStatus.rejected => ('Rejected', Icons.cancel, KeleleColors.redGlow, KeleleColors.red),
     };
 
     return Container(
@@ -23,15 +25,7 @@ class StatusBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            status == CreatorStatus.verified
-                ? Icons.check_circle
-                : status == CreatorStatus.pending
-                    ? Icons.access_time
-                    : Icons.cancel,
-            size: 12,
-            color: fg,
-          ),
+          Icon(icon, size: 12, color: fg),
           const SizedBox(width: 4),
           Text(
             label,
