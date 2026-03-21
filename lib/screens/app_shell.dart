@@ -55,9 +55,11 @@ class _AppShellState extends ConsumerState<AppShell>
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     if (user == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      // Redirect to login instead of showing a spinner
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/login');
+      });
+      return const SizedBox.shrink();
     }
 
     final isGuest = user.isGuest;
