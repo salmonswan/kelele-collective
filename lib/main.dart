@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'config.dart';
 import 'firebase_options.dart';
 import 'router.dart';
+import 'services/seed_service.dart';
 import 'theme/app_theme.dart';
 
 /// On Flutter web, the default ScrollBehavior doesn't include mouse
@@ -27,6 +28,14 @@ void main() async {
   if (!useMockData) {
     await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform);
+  }
+
+  // One-time seed: add ?seed=true to the URL to populate Firestore
+  if (!useMockData && Uri.base.queryParameters['seed'] == 'true') {
+    final seed = SeedService();
+    await seed.ensureAdminAccount();
+    await seed.seedCreators();
+    debugPrint('✓ Database seeded. Remove ?seed=true from URL.');
   }
 
   runApp(const ProviderScope(child: KeleleApp()));

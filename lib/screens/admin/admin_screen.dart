@@ -7,6 +7,7 @@ import '../../config.dart';
 import '../../data/mock_data.dart';
 import '../../models/creator.dart';
 import '../../providers/creator_provider.dart';
+import '../../services/seed_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/status_badge.dart';
 
@@ -22,6 +23,7 @@ enum _AdminFilter { all, pending, verified, emerging, notYet, rejected }
 class _AdminScreenState extends ConsumerState<AdminScreen> {
   _AdminFilter _filter = _AdminFilter.all;
   String? _reviewingId;
+  bool _seeding = false;
   final _notesC = TextEditingController();
   bool _showNotYetTemplate = false;
   String _notYetName = '';
@@ -100,6 +102,36 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
             Text('Manage creator applications and vetting',
                 style: TextStyle(fontSize: 14, color: KeleleColors.grayMid)),
             const SizedBox(height: 24),
+
+            // Seed button — only when database is empty
+            if (creators.isEmpty && !useMockData)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: ElevatedButton.icon(
+                  onPressed: _seeding ? null : () async {
+                    final messenger = ScaffoldMessenger.of(context);
+                    setState(() => _seeding = true);
+                    try {
+                      final seed = SeedService();
+                      await seed.seedCreators();
+                      await seed.ensureAdminAccount();
+                      messenger.showSnackBar(
+                        const SnackBar(content: Text('Database seeded with 10 creators + admin account')),
+                      );
+                    } catch (e) {
+                      messenger.showSnackBar(
+                        SnackBar(content: Text('Seed failed: $e')),
+                      );
+                    }
+                    if (mounted) setState(() => _seeding = false);
+                  },
+                  icon: _seeding
+                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Icon(Icons.cloud_upload, size: 18),
+                  label: Text(_seeding ? 'Seeding...' : 'Seed Database with Sample Creators'),
+                  style: ElevatedButton.styleFrom(backgroundColor: KeleleColors.pink),
+                ),
+              ),
 
             // Stats row
             Row(
