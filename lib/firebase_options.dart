@@ -1,25 +1,16 @@
-// Generated placeholder — replace with output from `flutterfire configure`
-//
-// To generate this file properly:
-//   1. Create a Firebase project at https://console.firebase.google.com
-//   2. Enable Authentication (Email/Password) and Cloud Firestore
-//   3. Install FlutterFire CLI: dart pub global activate flutterfire_cli
-//   4. Run: flutterfire configure --platforms=web
-//
-// This placeholder lets the app compile but Firebase will NOT work until
-// you replace this file with the real generated options.
-
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    // TODO: Replace with your actual Firebase config
-    return const FirebaseOptions(
-      apiKey: 'YOUR-API-KEY',
-      appId: 'YOUR-APP-ID',
-      messagingSenderId: 'YOUR-SENDER-ID',
-      projectId: 'YOUR-PROJECT-ID',
-      storageBucket: 'YOUR-STORAGE-BUCKET',
-    );
+    return web;
   }
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyASocqnzvKo-kXjbmWgkBuRPhD4Hn5sIhQ',
+    appId: '1:155022503410:web:6e9e8358b0d8d4d7bb8f6b',
+    messagingSenderId: '155022503410',
+    projectId: 'kelele-genius',
+    authDomain: 'kelele-genius.firebaseapp.com',
+    storageBucket: 'kelele-genius.firebasestorage.app',
+  );
 }

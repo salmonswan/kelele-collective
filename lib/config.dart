@@ -1,2 +1,2 @@
 /// Set to false when Firebase is configured and ready.
-const useMockData = true;
+const useMockData = false;
