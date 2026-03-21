@@ -226,8 +226,16 @@ class _CreatorApplicationScreenState
       return;
     }
 
-    await ref.read(creatorServiceProvider).addCreator(creatorData);
-    widget.onComplete();
+    try {
+      await ref.read(creatorServiceProvider).addCreator(creatorData);
+      if (mounted) setState(() => _submitted = true);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Submission failed: $e')),
+        );
+      }
+    }
   }
 
   @override

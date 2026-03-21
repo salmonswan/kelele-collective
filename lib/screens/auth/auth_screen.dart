@@ -197,6 +197,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
           'bookmarks': <String>[],
         });
       }
+      if (mounted) context.go('/');
     } on fb.FirebaseAuthException catch (e) {
       if (mounted) setState(() => _error = e.message ?? 'Authentication failed');
     } catch (e) {
@@ -495,6 +496,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen>
                       onTap: () {
                         if (useMockData) {
                           ref.read(mockAuthProvider.notifier).loginAsGuest();
+                        } else {
+                          ref.read(isGuestProvider.notifier).state = true;
                         }
                         context.go('/');
                       },

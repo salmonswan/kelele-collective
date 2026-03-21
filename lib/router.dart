@@ -10,12 +10,18 @@ import 'screens/onboarding/creator_application.dart';
 
 /// Notifier that fires when auth state changes, used by GoRouter.refreshListenable.
 class _AuthChangeNotifier extends ChangeNotifier {
+  late final ProviderSubscription _sub;
+
   _AuthChangeNotifier(Ref ref) {
-    if (useMockData) {
-      ref.listen(mockAuthProvider, (_, __) => notifyListeners());
-    } else {
-      ref.listen(authProvider, (_, __) => notifyListeners());
-    }
+    _sub = useMockData
+        ? ref.listen(mockAuthProvider, (_, __) => notifyListeners())
+        : ref.listen(authProvider, (_, __) => notifyListeners());
+  }
+
+  @override
+  void dispose() {
+    _sub.close();
+    super.dispose();
   }
 }
 

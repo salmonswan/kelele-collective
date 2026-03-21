@@ -67,9 +67,24 @@ final authProvider = StreamProvider<AppUser?>((ref) {
   );
 });
 
+// ─── Guest mode (Firebase) ──────────────────────
+final isGuestProvider = StateProvider<bool>((ref) => false);
+
 // ─── Convenience providers (work in both modes) ─
 final currentUserProvider = Provider<AppUser?>((ref) {
   if (useMockData) return ref.watch(mockAuthProvider);
+  // In Firebase guest mode, return a guest AppUser
+  if (ref.watch(isGuestProvider)) {
+    return AppUser(
+      uid: 'guest',
+      name: 'Guest',
+      email: '',
+      role: UserRole.finder,
+      initials: 'G',
+      bookmarks: [],
+      isGuest: true,
+    );
+  }
   return ref.watch(authProvider).valueOrNull;
 });
 
