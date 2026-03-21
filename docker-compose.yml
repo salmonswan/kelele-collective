@@ -1,0 +1,7 @@
+services:
+  kelele-web:
+    build: .
+    container_name: kelele-web
+    ports:
+      - "4891:80"
+    restart: unless-stopped
