@@ -35,7 +35,7 @@ class _CreativeDashboardState extends ConsumerState<CreativeDashboard>
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final creators = ref.watch(creatorsProvider);
-    final myProfile = creators.where((c) => c.email == user?.email).firstOrNull;
+    final myProfile = creators.where((c) => c.userId == user?.uid).firstOrNull;
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -104,13 +104,62 @@ class _CreativeDashboardState extends ConsumerState<CreativeDashboard>
   }
 }
 
-class _ProfileTab extends StatelessWidget {
+class _ProfileTab extends ConsumerStatefulWidget {
   final AppUser? user;
   final Creator? profile;
   const _ProfileTab({required this.user, required this.profile});
 
   @override
+  ConsumerState<_ProfileTab> createState() => _ProfileTabState();
+}
+
+class _ProfileTabState extends ConsumerState<_ProfileTab> {
+  bool _editing = false;
+  bool _saving = false;
+  final _nameC = TextEditingController();
+  final _bioC = TextEditingController();
+  final _locationC = TextEditingController();
+  final _servicesC = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameC.dispose();
+    _bioC.dispose();
+    _locationC.dispose();
+    _servicesC.dispose();
+    super.dispose();
+  }
+
+  void _startEditing() {
+    final p = widget.profile!;
+    _nameC.text = p.name;
+    _bioC.text = p.bio;
+    _locationC.text = p.location;
+    _servicesC.text = p.services;
+    setState(() => _editing = true);
+  }
+
+  Future<void> _save() async {
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _saving = true);
+    try {
+      await ref.read(creatorServiceProvider).updateCreator(widget.profile!.id, {
+        'name': _nameC.text.trim(),
+        'bio': _bioC.text.trim(),
+        'location': _locationC.text.trim(),
+        'services': _servicesC.text.trim(),
+      });
+      messenger.showSnackBar(const SnackBar(content: Text('Profile updated')));
+      if (mounted) setState(() => _editing = false);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Save failed: $e')));
+    }
+    if (mounted) setState(() => _saving = false);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final profile = widget.profile;
     return SingleChildScrollView(
       child: Container(
         padding: const EdgeInsets.all(24),
@@ -122,28 +171,86 @@ class _ProfileTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Your Profile',
-                style: GoogleFonts.spaceGrotesk(
-                    fontSize: 18, fontWeight: FontWeight.w700)),
+            Row(
+              children: [
+                Text('Your Profile',
+                    style: GoogleFonts.spaceGrotesk(
+                        fontSize: 18, fontWeight: FontWeight.w700)),
+                const Spacer(),
+                if (profile != null && !_editing)
+                  OutlinedButton.icon(
+                    onPressed: _startEditing,
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Edit'),
+                  ),
+              ],
+            ),
             const SizedBox(height: 20),
-            if (profile != null) ...[
-              _InfoRow('Name', profile!.name),
-              _InfoRow('Email', profile!.email),
-              _InfoRow('Location', profile!.location),
-              _InfoRow('Primary Skill', profile!.mainSkill.discipline),
-              _InfoRow('Level', profile!.levelLabel),
-              _InfoRow('Price Range', profile!.priceLabel),
-              const SizedBox(height: 16),
-              Text('Bio', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: KeleleColors.grayMid)),
-              const SizedBox(height: 4),
-              Text(profile!.bio, style: TextStyle(fontSize: 14, height: 1.6, color: const Color(0xFF555555))),
-            ] else
+            if (profile == null)
               Text(
                 'Your profile will appear here once approved.',
                 style: TextStyle(color: KeleleColors.grayMid),
+              )
+            else if (_editing) ...[
+              _EditField('Name', _nameC),
+              _EditField('Location', _locationC),
+              _EditField('Bio', _bioC, maxLines: 4),
+              _EditField('Services', _servicesC, maxLines: 3),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  ElevatedButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(width: 16, height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text('Save'),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton(
+                    onPressed: _saving ? null : () => setState(() => _editing = false),
+                    child: const Text('Cancel'),
+                  ),
+                ],
               ),
+            ] else ...[
+              _InfoRow('Name', profile.name),
+              _InfoRow('Email', profile.email),
+              _InfoRow('Location', profile.location),
+              _InfoRow('Primary Skill', profile.mainSkill.discipline),
+              _InfoRow('Level', profile.levelLabel),
+              _InfoRow('Price Range', profile.priceLabel),
+              if (profile.services.isNotEmpty)
+                _InfoRow('Services', profile.services),
+              const SizedBox(height: 16),
+              Text('Bio', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: KeleleColors.grayMid)),
+              const SizedBox(height: 4),
+              Text(profile.bio, style: TextStyle(fontSize: 14, height: 1.6, color: const Color(0xFF555555))),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _EditField extends StatelessWidget {
+  final String label;
+  final TextEditingController controller;
+  final int maxLines;
+  const _EditField(this.label, this.controller, {this.maxLines = 1});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: KeleleColors.grayMid)),
+          const SizedBox(height: 6),
+          TextField(controller: controller, maxLines: maxLines),
+        ],
       ),
     );
   }

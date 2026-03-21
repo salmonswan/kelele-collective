@@ -321,7 +321,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   icon: bookmarked
                                       ? Icons.star
                                       : Icons.star_border,
-                                  onTap: () => toggleBookmark(ref, c.id),
+                                  onTap: () => toggleBookmark(ref, c.id).catchError((_) {}),
                                 ),
                               ),
                             // Share

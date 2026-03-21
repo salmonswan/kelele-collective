@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../config.dart';
 import '../../models/creator.dart';
 import '../../providers/creator_provider.dart';
 import '../../theme/app_theme.dart';
@@ -54,6 +55,7 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
   @override
   Widget build(BuildContext context) {
     final view = ref.watch(directoryViewProvider);
+    final isLoading = !useMockData && ref.watch(creatorsStreamProvider).isLoading;
     final selectedSkill = ref.watch(selectedSkillProvider);
     final selectedLocation = ref.watch(selectedLocationProvider);
     final selectedLevel = ref.watch(selectedLevelProvider);
@@ -282,6 +284,7 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                   ? _ProjectsView(
                       projects: filteredProjects,
                       onOpenLightbox: _openLightbox,
+                      isLoading: isLoading,
                     )
                   : const _PeopleView(),
             ),
@@ -308,16 +311,19 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
 class _ProjectsView extends StatelessWidget {
   final List<({PortfolioItem project, Creator creator})> projects;
   final void Function(String projectId, String creatorId) onOpenLightbox;
+  final bool isLoading;
 
   const _ProjectsView(
-      {required this.projects, required this.onOpenLightbox});
+      {required this.projects, required this.onOpenLightbox, this.isLoading = false});
 
   @override
   Widget build(BuildContext context) {
     if (projects.isEmpty) {
       return Center(
-        child: Text('No projects match your search',
-            style: TextStyle(color: KeleleColors.grayMid)),
+        child: isLoading
+            ? const CircularProgressIndicator()
+            : Text('No projects match your search',
+                style: TextStyle(color: KeleleColors.grayMid)),
       );
     }
     return CustomScrollView(
@@ -411,9 +417,12 @@ class _PeopleViewState extends ConsumerState<_PeopleView>
     }
 
     if (creators.isEmpty) {
+      final loading = !useMockData && ref.watch(creatorsStreamProvider).isLoading;
       return Center(
-        child: Text('No creators match your search',
-            style: TextStyle(color: KeleleColors.grayMid)),
+        child: loading
+            ? const CircularProgressIndicator()
+            : Text('No creators match your search',
+                style: TextStyle(color: KeleleColors.grayMid)),
       );
     }
     return CustomScrollView(

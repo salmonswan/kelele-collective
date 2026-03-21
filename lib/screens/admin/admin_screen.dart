@@ -358,14 +358,14 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       Switch(
                                         value: reviewing.isPublic,
                                         activeTrackColor: KeleleColors.green,
-                                        onChanged: (_) {
+                                        onChanged: (_) async {
                                           if (useMockData) {
                                             _updateMockCreator(reviewing.id, {
                                               'isPublic': !reviewing.isPublic,
                                             });
                                             setState(() {});
                                           } else {
-                                            ref
+                                            await ref
                                                 .read(creatorServiceProvider)
                                                 .togglePublic(reviewing.id, !reviewing.isPublic);
                                           }
@@ -463,7 +463,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                 children: [
                                   // ── Approve ──
                                   ElevatedButton.icon(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       final fields = {
                                         'status': CreatorStatus.verified.name,
                                         'reviewNotes': _notesC.text,
@@ -474,7 +474,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
                                       }
                                       _vettingChecks.remove(reviewing.id);
                                       _notesC.clear();
@@ -489,7 +489,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   const SizedBox(width: 10),
                                   // ── Approve as Emerging ──
                                   ElevatedButton.icon(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       final fields = {
                                         'status': CreatorStatus.verifiedEmerging.name,
                                         'reviewNotes': _notesC.text,
@@ -500,7 +500,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
                                       }
                                       _vettingChecks.remove(reviewing.id);
                                       _notesC.clear();
@@ -515,7 +515,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   const SizedBox(width: 10),
                                   // ── Not Yet (soft reject — feedback + reapply soon) ──
                                   OutlinedButton.icon(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       final reapply = DateTime.now()
                                           .add(const Duration(days: 30))
                                           .toIso8601String()
@@ -531,7 +531,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
                                       }
                                       final savedNotes = _notesC.text;
                                       _vettingChecks.remove(reviewing.id);
@@ -553,7 +553,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   const SizedBox(width: 10),
                                   // ── Reject (hard — substandard, 3-month wait) ──
                                   OutlinedButton.icon(
-                                    onPressed: () {
+                                    onPressed: () async {
                                       final reapply = DateTime.now()
                                           .add(const Duration(days: 90))
                                           .toIso8601String()
@@ -569,7 +569,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
                                       }
                                       _vettingChecks.remove(reviewing.id);
                                       _notesC.clear();

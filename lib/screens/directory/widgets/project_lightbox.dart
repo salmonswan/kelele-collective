@@ -140,7 +140,7 @@ class _ProjectLightboxState extends ConsumerState<ProjectLightbox>
                             _TopAction(
                               bookmarked ? Icons.star : Icons.star_border,
                               bookmarked ? 'Saved' : 'Save',
-                              onTap: () => toggleBookmark(ref, c.id),
+                              onTap: () => toggleBookmark(ref, c.id).catchError((_) {}),
                             ),
                             const SizedBox(width: 8),
                             _TopAction(
