@@ -696,8 +696,6 @@ class _LinkUpCard extends StatelessWidget {
                       child: isGuest
                           ? ElevatedButton.icon(
                               onPressed: () async {
-                                Navigator.of(context)
-                                    .popUntil((route) => route.isFirst);
                                 ref.read(isGuestProvider.notifier).state = false;
                                 if (useMockData) {
                                   ref
