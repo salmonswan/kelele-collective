@@ -85,7 +85,11 @@ final currentUserProvider = Provider<AppUser?>((ref) {
       isGuest: true,
     );
   }
-  return ref.watch(authProvider).valueOrNull;
+  return ref.watch(authProvider).when(
+    data: (user) => user,
+    loading: () => null,
+    error: (_, __) => null,
+  );
 });
 
 final bookmarksProvider = Provider<Set<String>>((ref) {
