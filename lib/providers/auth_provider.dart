@@ -62,7 +62,7 @@ final authProvider = StreamProvider<AppUser?>((ref) {
             fbUser.uid, snap.data()! as Map<String, dynamic>);
       });
     },
-    loading: () => const Stream.empty(),
+    loading: () => Stream.value(null),
     error: (_, __) => Stream.value(null),
   );
 });
