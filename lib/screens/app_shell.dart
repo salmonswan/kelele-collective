@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config.dart';
 import '../models/user.dart';
@@ -55,11 +54,9 @@ class _AppShellState extends ConsumerState<AppShell>
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     if (user == null) {
-      // Redirect to login instead of showing a spinner
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.go('/login');
-      });
-      return const SizedBox.shrink();
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     final isGuest = user.isGuest;
@@ -122,13 +119,12 @@ class _AppShellState extends ConsumerState<AppShell>
             Padding(
               padding: const EdgeInsets.only(right: 16),
               child: ElevatedButton.icon(
-                onPressed: () {
-                  context.go('/login');
+                onPressed: () async {
                   ref.read(isGuestProvider.notifier).state = false;
                   if (useMockData) {
                     ref.read(mockAuthProvider.notifier).logout();
                   } else {
-                    ref.read(authServiceProvider).signOut();
+                    await ref.read(authServiceProvider).signOut();
                   }
                 },
                 icon: const Icon(Icons.person_add_outlined, size: 16),
@@ -217,14 +213,13 @@ class _AppShellState extends ConsumerState<AppShell>
                   ),
                 ),
               ],
-              onSelected: (v) {
+              onSelected: (v) async {
                 if (v == 'logout') {
-                  context.go('/login');
                   ref.read(isGuestProvider.notifier).state = false;
                   if (useMockData) {
                     ref.read(mockAuthProvider.notifier).logout();
                   } else {
-                    ref.read(authServiceProvider).signOut();
+                    await ref.read(authServiceProvider).signOut();
                   }
                 }
               },
