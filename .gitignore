@@ -18,3 +18,4 @@ Thumbs.db
 # Generated
 .metadata
 .claude/
+firebase-debug.log
