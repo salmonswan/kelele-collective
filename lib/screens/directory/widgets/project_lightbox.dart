@@ -140,7 +140,14 @@ class _ProjectLightboxState extends ConsumerState<ProjectLightbox>
                             _TopAction(
                               bookmarked ? Icons.star : Icons.star_border,
                               bookmarked ? 'Saved' : 'Save',
-                              onTap: () => toggleBookmark(ref, c.id).catchError((_) {}),
+                              onTap: () {
+                                final messenger = ScaffoldMessenger.of(context);
+                                toggleBookmark(ref, c.id).catchError((e) {
+                                  messenger.showSnackBar(
+                                    SnackBar(content: Text('Bookmark failed: $e')),
+                                  );
+                                });
+                              },
                             ),
                             const SizedBox(width: 8),
                             _TopAction(

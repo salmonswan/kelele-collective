@@ -158,6 +158,17 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                             ),
                           ),
                         const SizedBox(width: 8),
+                        // Refresh button
+                        IconButton(
+                          icon: const Icon(Icons.refresh),
+                          onPressed: () => ref.invalidate(creatorsStreamProvider),
+                          tooltip: 'Refresh',
+                          style: IconButton.styleFrom(
+                            backgroundColor: KeleleColors.grayLight,
+                            foregroundColor: KeleleColors.dark,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
                         // View toggle
                         Container(
                           decoration: BoxDecoration(
@@ -280,13 +291,18 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
 
             // ─── CONTENT ───────────────────────
             Expanded(
-              child: view == DirectoryView.projects
-                  ? _ProjectsView(
-                      projects: filteredProjects,
-                      onOpenLightbox: _openLightbox,
-                      isLoading: isLoading,
-                    )
-                  : const _PeopleView(),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: view == DirectoryView.projects
+                      ? _ProjectsView(
+                          projects: filteredProjects,
+                          onOpenLightbox: _openLightbox,
+                          isLoading: isLoading,
+                        )
+                      : const _PeopleView(),
+                ),
+              ),
             ),
           ],
         ),

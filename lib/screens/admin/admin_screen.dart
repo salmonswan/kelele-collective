@@ -464,6 +464,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   // ── Approve ──
                                   ElevatedButton.icon(
                                     onPressed: () async {
+                                      final messenger = ScaffoldMessenger.of(context);
                                       final fields = {
                                         'status': CreatorStatus.verified.name,
                                         'reviewNotes': _notesC.text,
@@ -474,11 +475,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        try {
+                                          await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        } catch (e) {
+                                          if (mounted) {
+                                            messenger.showSnackBar(
+                                              SnackBar(content: Text('Update failed: $e')),
+                                            );
+                                          }
+                                          return;
+                                        }
                                       }
                                       _vettingChecks.remove(reviewing.id);
                                       _notesC.clear();
-                                      setState(() => _reviewingId = null);
+                                      if (mounted) setState(() => _reviewingId = null);
                                     },
                                     icon: const Icon(Icons.check, size: 18),
                                     label: const Text('Approve'),
@@ -490,6 +500,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   // ── Approve as Emerging ──
                                   ElevatedButton.icon(
                                     onPressed: () async {
+                                      final messenger = ScaffoldMessenger.of(context);
                                       final fields = {
                                         'status': CreatorStatus.verifiedEmerging.name,
                                         'reviewNotes': _notesC.text,
@@ -500,11 +511,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        try {
+                                          await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        } catch (e) {
+                                          if (mounted) {
+                                            messenger.showSnackBar(
+                                              SnackBar(content: Text('Update failed: $e')),
+                                            );
+                                          }
+                                          return;
+                                        }
                                       }
                                       _vettingChecks.remove(reviewing.id);
                                       _notesC.clear();
-                                      setState(() => _reviewingId = null);
+                                      if (mounted) setState(() => _reviewingId = null);
                                     },
                                     icon: const Icon(Icons.trending_up, size: 18),
                                     label: const Text('Emerging'),
@@ -516,6 +536,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   // ── Not Yet (soft reject — feedback + reapply soon) ──
                                   OutlinedButton.icon(
                                     onPressed: () async {
+                                      final messenger = ScaffoldMessenger.of(context);
                                       final reapply = DateTime.now()
                                           .add(const Duration(days: 30))
                                           .toIso8601String()
@@ -531,18 +552,29 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        try {
+                                          await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        } catch (e) {
+                                          if (mounted) {
+                                            messenger.showSnackBar(
+                                              SnackBar(content: Text('Update failed: $e')),
+                                            );
+                                          }
+                                          return;
+                                        }
                                       }
                                       final savedNotes = _notesC.text;
                                       _vettingChecks.remove(reviewing.id);
                                       _notesC.clear();
-                                      setState(() {
-                                        _reviewingId = null;
-                                        _showNotYetTemplate = true;
-                                        _notYetName = reviewing.name;
-                                        _notYetEmail = reviewing.email;
-                                        _notYetNotes = savedNotes;
-                                      });
+                                      if (mounted) {
+                                        setState(() {
+                                          _reviewingId = null;
+                                          _showNotYetTemplate = true;
+                                          _notYetName = reviewing.name;
+                                          _notYetEmail = reviewing.email;
+                                          _notYetNotes = savedNotes;
+                                        });
+                                      }
                                     },
                                     icon: const Icon(Icons.pause_circle_outline, size: 18),
                                     label: const Text('Not Yet'),
@@ -554,6 +586,7 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                   // ── Reject (hard — substandard, 3-month wait) ──
                                   OutlinedButton.icon(
                                     onPressed: () async {
+                                      final messenger = ScaffoldMessenger.of(context);
                                       final reapply = DateTime.now()
                                           .add(const Duration(days: 90))
                                           .toIso8601String()
@@ -569,11 +602,20 @@ class _AdminScreenState extends ConsumerState<AdminScreen> {
                                       if (useMockData) {
                                         _updateMockCreator(reviewing.id, fields);
                                       } else {
-                                        await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        try {
+                                          await ref.read(creatorServiceProvider).updateStatus(reviewing.id, fields);
+                                        } catch (e) {
+                                          if (mounted) {
+                                            messenger.showSnackBar(
+                                              SnackBar(content: Text('Update failed: $e')),
+                                            );
+                                          }
+                                          return;
+                                        }
                                       }
                                       _vettingChecks.remove(reviewing.id);
                                       _notesC.clear();
-                                      setState(() => _reviewingId = null);
+                                      if (mounted) setState(() => _reviewingId = null);
                                     },
                                     icon: const Icon(Icons.block, size: 18),
                                     label: const Text('Reject'),

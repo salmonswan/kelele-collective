@@ -321,7 +321,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   icon: bookmarked
                                       ? Icons.star
                                       : Icons.star_border,
-                                  onTap: () => toggleBookmark(ref, c.id).catchError((_) {}),
+                                  onTap: () {
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    toggleBookmark(ref, c.id).catchError((e) {
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text('Bookmark failed: $e')),
+                                      );
+                                    });
+                                  },
                                 ),
                               ),
                             // Share
