@@ -6,9 +6,7 @@ import '../../config.dart';
 import '../../models/creator.dart';
 import '../../providers/creator_provider.dart';
 import '../../theme/app_theme.dart';
-import 'widgets/project_card.dart';
 import 'widgets/people_card.dart';
-import 'widgets/project_lightbox.dart';
 import 'widgets/guide_wizard.dart';
 
 class DirectoryScreen extends ConsumerStatefulWidget {
@@ -19,11 +17,6 @@ class DirectoryScreen extends ConsumerStatefulWidget {
 }
 
 class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
-  ({String projectId, String creatorId})? _lightboxData;
-
-  void _openLightbox(String projectId, String creatorId) =>
-      setState(() => _lightboxData = (projectId: projectId, creatorId: creatorId));
-  void _closeLightbox() => setState(() => _lightboxData = null);
 
   bool _guideShown = false;
 
@@ -54,13 +47,10 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final view = ref.watch(directoryViewProvider);
-    final isLoading = !useMockData && ref.watch(creatorsStreamProvider).isLoading;
     final selectedSkill = ref.watch(selectedSkillProvider);
     final selectedLocation = ref.watch(selectedLocationProvider);
     final selectedLevel = ref.watch(selectedLevelProvider);
     final selectedPrice = ref.watch(selectedPriceProvider);
-    final filteredProjects = ref.watch(filteredProjectsProvider);
     final hasActiveFilters = selectedSkill != null ||
         selectedLocation != null ||
         selectedLevel != null ||
@@ -130,8 +120,7 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                         ),
                         const SizedBox(width: 12),
                         // Guide button
-                        if (view == DirectoryView.people)
-                          IconButton(
+                        IconButton(
                             onPressed: _showGuide,
                             icon: const Icon(Icons.explore_outlined),
                             tooltip: 'Find your match',
@@ -141,8 +130,7 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                             ),
                           ),
                         // Shuffle button
-                        if (view == DirectoryView.people)
-                          Padding(
+                        Padding(
                             padding: const EdgeInsets.only(left: 8),
                             child: IconButton(
                               onPressed: () => ref
@@ -169,31 +157,6 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        // View toggle
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(color: KeleleColors.grayBorder),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(children: [
-                            _ViewToggle(
-                              label: 'Projects',
-                              active: view == DirectoryView.projects,
-                              onTap: () => ref
-                                  .read(directoryViewProvider.notifier)
-                                  .state = DirectoryView.projects,
-                              isLeft: true,
-                            ),
-                            _ViewToggle(
-                              label: 'People',
-                              active: view == DirectoryView.people,
-                              onTap: () => ref
-                                  .read(directoryViewProvider.notifier)
-                                  .state = DirectoryView.people,
-                              isLeft: false,
-                            ),
-                          ]),
-                        ),
                       ],
                     ),
                   ),
@@ -294,87 +257,13 @@ class _DirectoryScreenState extends ConsumerState<DirectoryScreen> {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
-                  child: view == DirectoryView.projects
-                      ? _ProjectsView(
-                          projects: filteredProjects,
-                          onOpenLightbox: _openLightbox,
-                          isLoading: isLoading,
-                        )
-                      : const _PeopleView(),
+                  child: const _PeopleView(),
                 ),
               ),
             ),
           ],
         ),
 
-        // Project lightbox
-        if (_lightboxData != null)
-          ProjectLightbox(
-            projectId: _lightboxData!.projectId,
-            creatorId: _lightboxData!.creatorId,
-            onClose: _closeLightbox,
-            onViewCreator: (id) {
-              _closeLightbox();
-              context.push('/profile/$id');
-            },
-          ),
-      ],
-    );
-  }
-}
-
-// ─── PROJECTS GRID ──────────────────────────────
-class _ProjectsView extends StatelessWidget {
-  final List<({PortfolioItem project, Creator creator})> projects;
-  final void Function(String projectId, String creatorId) onOpenLightbox;
-  final bool isLoading;
-
-  const _ProjectsView(
-      {required this.projects, required this.onOpenLightbox, this.isLoading = false});
-
-  @override
-  Widget build(BuildContext context) {
-    if (projects.isEmpty) {
-      return Center(
-        child: isLoading
-            ? const CircularProgressIndicator()
-            : Text('No projects match your search',
-                style: TextStyle(color: KeleleColors.grayMid)),
-      );
-    }
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
-          sliver: SliverToBoxAdapter(
-            child: Text(
-                '${projects.length} project${projects.length != 1 ? 's' : ''}',
-                style: TextStyle(fontSize: 14, color: KeleleColors.grayMid)),
-          ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.all(24),
-          sliver: SliverGrid(
-            delegate: SliverChildBuilderDelegate(
-              (ctx, i) {
-                final entry = projects[i];
-                return ProjectCard(
-                  project: entry.project,
-                  creator: entry.creator,
-                  onTap: () =>
-                      onOpenLightbox(entry.project.id, entry.creator.id),
-                );
-              },
-              childCount: projects.length,
-            ),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 340,
-              mainAxisSpacing: 20,
-              crossAxisSpacing: 20,
-              childAspectRatio: 0.85,
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -516,42 +405,6 @@ class _PeopleViewState extends ConsumerState<_PeopleView>
           ),
         ),
       ],
-    );
-  }
-}
-
-// ─── VIEW TOGGLE BUTTON ─────────────────────────
-class _ViewToggle extends StatelessWidget {
-  final String label;
-  final bool active, isLeft;
-  final VoidCallback onTap;
-
-  const _ViewToggle(
-      {required this.label,
-      required this.active,
-      required this.onTap,
-      required this.isLeft});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-        decoration: BoxDecoration(
-          color: active ? KeleleColors.dark : Colors.white,
-          borderRadius: BorderRadius.horizontal(
-            left: isLeft ? const Radius.circular(7) : Radius.zero,
-            right: !isLeft ? const Radius.circular(7) : Radius.zero,
-          ),
-        ),
-        child: Text(label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: active ? Colors.white : KeleleColors.grayMid,
-            )),
-      ),
     );
   }
 }
