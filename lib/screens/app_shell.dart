@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -12,6 +13,7 @@ import '../screens/directory/directory_screen.dart';
 import '../screens/dashboard/finder_dashboard.dart';
 import '../screens/dashboard/creative_dashboard.dart';
 import '../screens/admin/admin_screen.dart';
+import '../widgets/update_banner.dart';
 
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
@@ -78,7 +80,10 @@ class _AppShellState extends ConsumerState<AppShell>
 
     final wide = MediaQuery.of(context).size.width > 800;
 
-    return Scaffold(
+    return Column(
+      children: [
+        if (kIsWeb) const UpdateBanner(),
+        Expanded(child: Scaffold(
       // ─── APP BAR ────────────────────────
       appBar: AppBar(
         toolbarHeight: 60,
@@ -276,6 +281,8 @@ class _AppShellState extends ConsumerState<AppShell>
                       ))
                   .toList(),
             ),
+    )),
+      ],
     );
   }
 }

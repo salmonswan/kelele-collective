@@ -7,6 +7,7 @@ import 'config.dart';
 import 'firebase_options.dart';
 import 'router.dart';
 import 'services/seed_service.dart';
+import 'services/sw_update_service.dart';
 import 'theme/app_theme.dart';
 
 /// On Flutter web, the default ScrollBehavior doesn't include mouse
@@ -37,6 +38,8 @@ void main() async {
     await seed.seedCreators();
     debugPrint('✓ Database seeded. Remove ?seed=true from URL.');
   }
+
+  if (kIsWeb) SwUpdateService.instance.init();
 
   runApp(const ProviderScope(child: KeleleApp()));
 }
