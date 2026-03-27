@@ -43,12 +43,12 @@ final _mockBookmarksProvider = StateProvider<Set<String>>((ref) => {});
 
 // ─── Firebase auth streams ──────────────────────
 final firebaseAuthStateProvider = StreamProvider<fb.User?>((ref) {
-  if (useMockData) return const Stream.empty();
+  if (useMockData) return Stream.value(null);
   return ref.watch(authServiceProvider).authStateChanges;
 });
 
 final authProvider = StreamProvider<AppUser?>((ref) {
-  if (useMockData) return const Stream.empty();
+  if (useMockData) return Stream.value(null);
   final fbAsync = ref.watch(firebaseAuthStateProvider);
   return fbAsync.when(
     data: (fbUser) {
