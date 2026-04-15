@@ -6,6 +6,7 @@ import 'providers/auth_provider.dart';
 import 'screens/auth/auth_screen.dart';
 import 'screens/app_shell.dart';
 import 'screens/profile/profile_screen.dart';
+import 'screens/coming_soon/coming_soon_screen.dart';
 import 'screens/onboarding/creator_application.dart';
 
 /// Notifier that fires when auth state changes, used by GoRouter.refreshListenable.
@@ -64,16 +65,28 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login',
     refreshListenable: authNotifier,
     redirect: (context, state) {
+      // Coming-soon gate — redirect everything except /coming-soon itself
+      if (comingSoonMode && state.uri.path != '/coming-soon') {
+        return '/coming-soon';
+      }
+
       final loggedIn = ref.read(currentUserProvider) != null;
       final isAuthRoute =
           state.uri.path == '/login' || state.uri.path == '/signup';
       final isApply = state.uri.path == '/apply';
 
-      if (!loggedIn && !isAuthRoute && !isApply) return '/login';
+      final isComingSoon = state.uri.path == '/coming-soon';
+
+      if (!loggedIn && !isAuthRoute && !isApply && !isComingSoon) return '/login';
       if (loggedIn && isAuthRoute) return '/';
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/coming-soon',
+        pageBuilder: (ctx, state) =>
+            _fadePage(state, const ComingSoonScreen()),
+      ),
       GoRoute(
         path: '/login',
         pageBuilder: (ctx, state) =>
